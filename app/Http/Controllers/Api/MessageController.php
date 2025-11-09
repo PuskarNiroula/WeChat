@@ -4,15 +4,18 @@ use App\Http\Controllers\Controller;
 use App\Models\ConUser;
 use App\Models\Message;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class MessageController extends Controller
 {
-    public function getChunkMessages(Request $request):JsonResponse
+    public function getChunkMessages(int $conversation_id):JsonResponse
     {
+        if($conversation_id == 0|| $conversation_id == null){
+            return response()->json(['error' => 'hello world'], 403);
+
+        }
         $userId = Auth::id();
-        $conversationId = $request->conversation_id;
+        $conversationId = $conversation_id;
 
 
         $exists = ConUser::where('conversation_id', $conversationId)

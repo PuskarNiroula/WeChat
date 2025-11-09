@@ -13,7 +13,7 @@ Route::controller(AuthController::class)->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::controller(MessageController::class)->group(function () {
-        Route::get('/getMessages', 'getChunkMessages')->name('getMessages');
+        Route::get('/getMessages/{id}', 'getChunkMessages')->name('getMessages');
     });
 });
 

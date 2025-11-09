@@ -2,8 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\conversation;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Conversation;
 use Illuminate\Database\Seeder;
 
 class CoversationSeeder extends Seeder
@@ -13,8 +12,7 @@ class CoversationSeeder extends Seeder
      */
     public function run(): void
     {
-
-            conversation::create([
+            Conversation::create([
                 'type'=>"private"
         ]);
 

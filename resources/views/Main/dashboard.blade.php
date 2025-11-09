@@ -77,7 +77,7 @@
 <script>
     async function loadMessages(id) {
         try {
-            const response = await secureFetch(`/getMessages?conversation_id=${id}`, {
+            const response = await secureFetch(`/getMessages/${id}`, {
                 method: "GET"
             });
 
