@@ -29,7 +29,7 @@
                     <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
 
                     <!-- Floating search results container -->
-                    <div id="searchResults" class="position-absolute w-100 bg-white border rounded shadow-sm" style="top: 100%; left: 0; z-index: 1000; display: none;"></div>
+                    <div id="searchResults" class="position-absolute w-100 bg-white border rounded shadow-sm" style="top: 100%; left: 0; z-index: 1000; max-height: 300px; overflow-y: auto; display: none;"></div>
                 </div>
             </div>
             <i class="bi bi-three-dots-vertical fs-4 text-secondary"></i>
@@ -104,13 +104,13 @@
     // Search function that calls the API using secureFetch
 
     async function search(query) {
-        const resultsContainer = document.getElementById('searchResults');
-
         if (!query) {
             resultsContainer.style.display = 'none';
             resultsContainer.innerHTML = '';
             return;
         }
+        resultsContainer.innerHTML = '<div class="px-3 py-2 text-muted">Searching...</div>';
+        resultsContainer.style.display = 'block';
 
         try {
             const results = await secureFetch(`/search/${encodeURIComponent(query)}`, {
@@ -157,6 +157,8 @@
     resultsContainer.addEventListener('mousedown', (e) => {
         e.preventDefault(); // prevent blur before click
     });
+
+
 
     searchInput.addEventListener('blur', () => {
         // Small timeout to allow click to register

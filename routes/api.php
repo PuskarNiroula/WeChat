@@ -17,7 +17,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/getMessages/{id}', 'getChunkMessages')->name('getMessages');
     });
     Route::controller(ExtraController::class)->group(function () {
-        Route::get('/search/{string}', 'search')->name('getUsers');
+        Route::get('/search/{string}', 'search')->name('searchUsers');
     });
 });
 
