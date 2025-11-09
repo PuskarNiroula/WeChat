@@ -4,7 +4,6 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
-// If you want, you can keep / separately
 Route::get('/', function () {
     return redirect()->route('loginPage');
 });
