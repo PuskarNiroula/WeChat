@@ -159,3 +159,7 @@ body {
 h5 {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+ .search-item:hover {
+     background-color: #f1f1f1;
+ }
+
