@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('conversations', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['user', 'group']);
+            $table->enum('type', ['private', 'group']);
             $table->timestamps();
         });
     }

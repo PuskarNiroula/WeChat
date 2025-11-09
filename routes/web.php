@@ -15,10 +15,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(AuthController::class)->group(function () {
         Route::post('/logout', 'logout')->name('logout');
     });
-
     Route::controller(MainController::class)->group(function () {
         Route::get("/dashboard","dashboard")->name("dashboard");
-
     });
 
 });
