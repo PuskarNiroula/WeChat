@@ -19,6 +19,9 @@ class ConUser extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+    public function messages(){
+        return $this->hasMany(Message::class);
+    }
 
 
 }

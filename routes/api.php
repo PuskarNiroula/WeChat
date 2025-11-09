@@ -18,6 +18,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::controller(ExtraController::class)->group(function () {
         Route::get('/search/{string}', 'search')->name('searchUsers');
+        ROute::get("/getSidebarMembers","getSidebar")->name("getSidebarMembers");
     });
 });
 
