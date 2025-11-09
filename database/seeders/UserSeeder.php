@@ -15,13 +15,13 @@ class UserSeeder extends Seeder
     {
         $users=[
             [
-                'name'=>"Puskar Niroula",
-                "email"=>"puskar@gmail.com",
+                'name'=>"Ram Bahadur",
+                "email"=>"ram@gmail.com",
                 "password"=>"Password@123"
             ],
             [
-                'name'=>"Samana Dahal",
-                "email"=>"samana@gmail.com",
+                'name'=>"Sita Kumari",
+                "email"=>"sita@gmail.com",
                 "password"=>"Password@123"
 
             ]

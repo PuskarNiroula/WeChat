@@ -1,9 +1,7 @@
 <?php
 
-use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\API\MainController;
-use App\Http\Controllers\HomeController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\MessageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/test', function () {
@@ -13,8 +11,10 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/api/login', 'login');
 });
 
-Route::controller(HomeController::class)->group(function () {
-    Route::get('/loginPage', 'gotoLoginPage');
+Route::middleware('auth:sanctum')->group(function () {
+    Route::controller(MessageController::class)->group(function () {
+        Route::get('/getMessages/{id}', 'getChunkMessages')->name('getMessages');
+    });
 });
 
 

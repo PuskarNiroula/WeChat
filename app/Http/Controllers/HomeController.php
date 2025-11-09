@@ -11,19 +11,25 @@ class HomeController extends Controller{
     public function gotoLoginPage(){
         return view('Auth.login');
     }
-    public function loginWeb(Request $request){
-        Auth::attempt($request->only('email', 'password'));
+
+    public function loginWeb(Request $request)
+    {
+        if (!Auth::attempt($request->only('email', 'password'))) {
+            return response()->json([
+                'message' => 'Invalid credentials'
+            ], 401);
+        }
         $request->session();
         Auth::login($request->user());
-        $user=Auth::user();
+        $user = Auth::user();
         $token = $user->createToken('chatapp')->plainTextToken;
 
         return response()->json([
             'user'=> $user,
             'token'=> $token,
         ]);
-
-
-
+    }
+    public function dashboard(){
+        return view('Main.dashboard');
     }
 }
