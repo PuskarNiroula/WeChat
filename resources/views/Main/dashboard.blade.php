@@ -7,12 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{asset('css/custom.css')}}">
     <script src="{{asset('js/script.js')}}"></script>
-    <style>
-        /* Optional hover effect */
-        .search-item:hover {
-            background-color: #f1f1f1;
-        }
-    </style>
+
 </head>
 
 <body>
@@ -134,7 +129,7 @@
             results.forEach(user => {
                 const div = document.createElement('div');
                 div.textContent = user;
-                div.className = 'px-3 py-2 search-item hover-bg-light';
+                div.className = 'px-3 py-2 search-item';
                 div.style.cursor = 'pointer';
 
                 // Optional: click to select user
@@ -152,13 +147,30 @@
             console.error('Search error:', err.message);
         }
     }
+    const resultsContainer = document.getElementById('searchResults');
 
     // Attach debounced input listener
     const searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('input', debounce((e) => {
         search(e.target.value);
     }, 500));
+    resultsContainer.addEventListener('mousedown', (e) => {
+        e.preventDefault(); // prevent blur before click
+    });
 
+    searchInput.addEventListener('blur', () => {
+        // Small timeout to allow click to register
+        setTimeout(() => {
+            resultsContainer.style.display = 'none';
+        }, 100);
+    });
+
+    // Optional: show results again when input gains focus if value exists
+    searchInput.addEventListener('focus', () => {
+        if (searchInput.value.trim() !== '') {
+            search(searchInput.value);
+        }
+    });
 </script>
 
 </html>

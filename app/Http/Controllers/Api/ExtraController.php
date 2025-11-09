@@ -8,10 +8,13 @@ use Illuminate\Http\JsonResponse;
 
 class ExtraController extends Controller{
     public function search(string $searchTerm):JsonResponse{
-        if($searchTerm == null||trim($searchTerm)==""){
-            return response()->json(['error' => 'Search term cannot be empty'], 401);
+        if(trim($searchTerm)==""){
+            return response()->json(['error' => 'Search term cannot be empty'], 400);
         }
-        $users=User::where('name','like','%'.$searchTerm.'%')->paginate(10)->pluck('name');
+        $users=User::where('name','like','%'.$searchTerm.'%')
+            ->limit(10)
+            ->get()
+            ->pluck('name');
         return response()->json($users,200);
     }
 }
