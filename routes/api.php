@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ExtraController;
 use App\Http\Controllers\Api\MessageController;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,9 @@ Route::controller(AuthController::class)->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::controller(MessageController::class)->group(function () {
         Route::get('/getMessages/{id}', 'getChunkMessages')->name('getMessages');
+    });
+    Route::controller(ExtraController::class)->group(function () {
+        Route::get('/search/{string}', 'search')->name('getUsers');
     });
 });
 

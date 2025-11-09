@@ -7,6 +7,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{asset('css/custom.css')}}">
     <script src="{{asset('js/script.js')}}"></script>
+    <style>
+        /* Optional hover effect */
+        .search-item:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
 </head>
 
 <body>
@@ -15,7 +21,7 @@
     {{-- Sidebar --}}
     <div class="sidebar">
         <div class="sidebar-header d-flex align-items-center justify-content-between p-3 border-bottom">
-            <div class="d-flex align-items-center ">
+            <div class="d-flex align-items-center">
                 <h5 class="mb-0 me-2 text-success fw-bold w-50">We Chat</h5>
                 <div class="position-relative w-100">
                     <input
@@ -23,8 +29,12 @@
                         id="searchInput"
                         class="form-control ps-5 pe-3 py-2 rounded-pill shadow-sm"
                         placeholder="Search users..."
+                        autocomplete="off"
                     >
                     <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+
+                    <!-- Floating search results container -->
+                    <div id="searchResults" class="position-absolute w-100 bg-white border rounded shadow-sm" style="top: 100%; left: 0; z-index: 1000; display: none;"></div>
                 </div>
             </div>
             <i class="bi bi-three-dots-vertical fs-4 text-secondary"></i>
@@ -97,24 +107,58 @@
     }
 
     // Search function that calls the API using secureFetch
+
     async function search(query) {
-        if (!query) return; // skip empty queries
+        const resultsContainer = document.getElementById('searchResults');
+
+        if (!query) {
+            resultsContainer.style.display = 'none';
+            resultsContainer.innerHTML = '';
+            return;
+        }
+
         try {
-            const results = await secureFetch(`/search?query=${encodeURIComponent(query)}`, {
+            const results = await secureFetch(`/search/${encodeURIComponent(query)}`, {
                 method: 'GET'
             });
-            console.log('Search results:', results);
-            // TODO: render results in the UI
+
+            // Clear previous results
+            resultsContainer.innerHTML = '';
+
+            if (results.length === 0) {
+                resultsContainer.style.display = 'none';
+                return;
+            }
+
+            // Populate results
+            results.forEach(user => {
+                const div = document.createElement('div');
+                div.textContent = user;
+                div.className = 'px-3 py-2 search-item hover-bg-light';
+                div.style.cursor = 'pointer';
+
+                // Optional: click to select user
+                div.addEventListener('click', () => {
+                    document.getElementById('searchInput').value = user;
+                    resultsContainer.style.display = 'none';
+                    console.log('User selected:', user);
+                });
+
+                resultsContainer.appendChild(div);
+            });
+
+            resultsContainer.style.display = 'block';
         } catch (err) {
             console.error('Search error:', err.message);
         }
     }
 
-    // Attach debounced search to input
+    // Attach debounced input listener
     const searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('input', debounce((e) => {
         search(e.target.value);
     }, 500));
+
 </script>
 
 </html>
