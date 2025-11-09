@@ -22,8 +22,8 @@ class HomeController extends Controller{
             'user'=> $user,
             'token'=> $token,
         ]);
-
-
-
+    }
+    public function dashboard(){
+        return view('Main.dashboard');
     }
 }

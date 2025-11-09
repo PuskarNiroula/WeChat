@@ -21,14 +21,14 @@ body {
     flex-direction: column;
 }
 
-.sidebar-header {
-    background-color: #4dc596;
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #ddd;
-}
+/*.sidebar-header {*/
+/*    background-color: #4dc596;*/
+/*    padding: 15px;*/
+/*    display: flex;*/
+/*    justify-content: space-between;*/
+/*    align-items: center;*/
+/*    border-bottom: 1px solid #ddd;*/
+/*}*/
 
 .chat-list {
     flex: 1;
@@ -133,4 +133,29 @@ body {
     color: white;
     padding: 10px 15px;
     border-radius: 50%;
+}
+.sidebar-header {
+    background-color: #f0f0f0; /* light gray like WhatsApp sidebar */
+}
+
+#searchInput {
+    border: 1px solid #ccc;
+    font-size: 0.9rem;
+    transition: all 0.2s ease-in-out;
+    width: 60%;
+}
+
+#searchInput:focus {
+    border-color: #128c7e;
+    box-shadow: 0 0 5px rgba(18, 140, 126, 0.5);
+    outline: none;
+    width: 100%;
+}
+
+.bi-three-dots-vertical {
+    cursor: pointer;
+}
+
+h5 {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
