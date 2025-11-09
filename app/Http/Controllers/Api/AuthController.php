@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\API;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -11,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     // Register user
-    public function register(Request $request)
+    public function register(Request $request): JsonResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -35,7 +36,11 @@ class AuthController extends Controller
     }
 
     // Login user
-    public function login(Request $request)
+
+    /**
+     * @throws ValidationException
+     */
+    public function login(Request $request):JsonResponse
     {
         $request->validate([
             'email'=> 'required|email',
@@ -59,7 +64,7 @@ class AuthController extends Controller
     }
 
     // Logout user
-    public function logout(Request $request)
+    public function logout(Request $request):JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
 
@@ -69,7 +74,7 @@ class AuthController extends Controller
     }
 
     // Get current user
-    public function me(Request $request)
+    public function me(Request $request):JsonResponse
     {
         return response()->json($request->user());
     }

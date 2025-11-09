@@ -115,8 +115,6 @@
     searchInput.addEventListener('input', debounce((e) => {
         search(e.target.value);
     }, 500));
-
-
 </script>
 
 </html>

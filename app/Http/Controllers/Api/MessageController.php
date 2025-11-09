@@ -3,12 +3,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ConUser;
 use App\Models\Message;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class MessageController extends Controller
 {
-    public function getChunkMessages(Request $request)
+    public function getChunkMessages(Request $request):JsonResponse
     {
         $userId = Auth::id();
         $conversationId = $request->conversation_id;
