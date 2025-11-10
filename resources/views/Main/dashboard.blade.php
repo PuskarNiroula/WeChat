@@ -15,43 +15,74 @@
             background-color: #f9f9f9;
         }
 
+        .chat-messages {
+            display: flex;
+            flex-direction: column-reverse;
+            padding: 10px;
+            overflow-y: auto;
+            height: calc(100vh - 180px); /* adjust as needed */
+            background-color: #f5f5f5;
+        }
+
+        /* Common message style */
         .message {
             display: flex;
-            margin-bottom: 10px;
+            margin: 5px 0;
         }
 
-        .message.sent {
-            justify-content: flex-end;
-        }
-
-        .message.received {
-            justify-content: flex-start;
-        }
-
+        /* Chat message bubbles directly */
         .message-bubble {
+            display: inline-block;
             max-width: 70%;
             padding: 10px 14px;
-            border-radius: 18px;
-            background-color: #e2ffc6; /* green bubble */
+            border-radius: 10px;
+            word-wrap: break-word;
+            font-size: 14px;
+            line-height: 1.4;
+            margin: 5px 0;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
         }
 
-        .message.received .message-bubble {
-            background-color: #fff;
-            border: 1px solid #ddd;
+        /* Sent messages (align right, green) */
+        .message-bubble.sent {
+            background-color: #dcf8c6;
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
         }
 
+        /* Received messages (align left, white) */
+        .message-bubble.received {
+            background-color: #ffffff;
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+        }
+
+        /* Ensure vertical stacking and alignment works */
+        .chat-messages {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* Message text and time */
         .message-bubble p {
             margin: 0;
-            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
         .message-bubble small {
             display: block;
             text-align: right;
             font-size: 11px;
-            margin-top: 3px;
-            color: #888;
+            color: #999;
+            margin-top: 4px;
         }
+
+
+
+
 
     </style>
 
@@ -99,7 +130,7 @@
         </div>
 
         <div class="chat-messages d-flex flex-column">
-            @yield('chat')
+
         </div>
 
         <div class="chat-input">
@@ -122,7 +153,6 @@
         try {
             conId = conversationId;
             const res = await secureFetch(`/getMessages/${conversationId}`, { method: "GET" });
-
             // Handle both array and object responses
             const messages = res.data || res.messages || res;
 
@@ -139,19 +169,17 @@
                 const messageClass = isOwnMessage ? 'sent' : 'received';
 
                 const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message', messageClass);
+                messageDiv.classList.add('message-bubble', messageClass);
                 messageDiv.innerHTML = `
-                <div class="message-bubble">
-                    <p class="mb-0">${msg.message}</p>
-                    <small class="text-muted">
-                        ${new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                    </small>
-                </div>
-            `;
+        <p class="mb-0">${msg.message}</p>
+        <small class="text-muted">
+            ${new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+        </small>
+    `;
                 chatMessages.appendChild(messageDiv);
             });
 
-            // Scroll to bottom so latest messages are visible
+
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
 
@@ -173,13 +201,17 @@
                 const lastMessage = user.last_message || 'No message yet';
                 const avatar = `https://i.pravatar.cc/50?u=${user.chat_member_id}`; // generates unique avatar per user
 
+                const isUnread = user.last_message_sender !== 'Myself' && user.is_read===0;
+                const messageColor = isUnread ? 'red' : 'black';
+                const messageFont=isUnread ? 'bold' : 'normal';
+
                 const chatItem = document.createElement('div');
                 chatItem.classList.add('chat-item');
                 chatItem.innerHTML = `
         <img src="${avatar}" alt="Avatar">
         <div class="chat-info">
             <h6>${username}</h6>
-            <small>${lastMessage}</small>
+            <small style="color:${messageColor}; font-weight: ${messageFont}">${lastMessage}</small>
         </div>
     `;
                 chatItem.addEventListener('click', () => {
@@ -200,7 +232,6 @@
 
     async function sendMessage() {
         const message = document.getElementById("message_to_be_sent").value.trim();
-        console.log(message);
         if (!message) {
             return;
         }
@@ -213,6 +244,7 @@
                 }
             });
             loadMessages(conId);
+            loadSidebar();
             document.getElementById("message_to_be_sent").value = "";
     }catch (Exception){
         console.log(Exception);
@@ -223,7 +255,6 @@
         try {
             const res = await secureFetch(`/openChat/${user_id}`, { method: "GET" });
             ChatUser.innerHTML = res.name;
-            console.log(res);
             loadMessages(res.conversation_id);
             loadSidebar();
         } catch (err) {
@@ -294,8 +325,6 @@
     resultsContainer.addEventListener('mousedown', (e) => {
         e.preventDefault(); // prevent blur before click
     });
-
-
 
     searchInput.addEventListener('blur', () => {
         // Small timeout to allow click to register
