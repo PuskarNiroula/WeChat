@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ConUser;
+use App\Models\Conversation;
 use App\Models\Message;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -70,6 +71,52 @@ public function sendMessage(Request $request){
         return response()->json(['error' => 'Fuck you a bit educated hacker, try harder next time i have left 2 loop holes'], 403);
 }
 
+    public function createOrFindConversation(int $user_id)
+    {
+        if ($user_id < 1) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid user id'
+            ], 401);
+        }
 
+        $myId = Auth::id();
+
+        if ($myId == $user_id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You cannot create a conversation with yourself'
+            ]);
+        }
+
+        $commonConversation =ConUser::
+            select('conversation_id')
+            ->where('user_id', $myId)
+            ->whereIn('conversation_id', function ($query) use ($user_id) {
+                $query->select('conversation_id')
+                    ->from('conversation_user')
+                    ->where('user_id', $user_id);
+            })
+            ->first();
+        $conversationId = $commonConversation->conversation_id??null;
+        if(!$commonConversation) {
+            $conv = Conversation::create([
+                'type' => "private"
+            ]);
+
+            ConUser::create([
+                'conversation_id' => $conv->id,
+                "user_id" =>Auth::id()
+            ]);
+            ConUser::create([
+                'conversation_id' => $conv->id,
+                "user_id" =>$user_id
+            ]);
+            $conversationId=$conv->id;
+        }
+            return response()->json([
+                'conversation_id' => $conversationId
+            ]);
+    }
 
 }

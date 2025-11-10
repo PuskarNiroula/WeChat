@@ -7,7 +7,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{asset('css/custom.css')}}">
     <script src="{{asset('js/script.js')}}"></script>
-    <script src="{{asset('js/loadMessage.js')}}"></script>
     <style>
         .chat-messages {
             flex: 1;
@@ -218,6 +217,16 @@
         }
     }
 
+    async function createOrOpenChat(user_id) {
+        try {
+            const res = await secureFetch(`/openChat/${user_id}`, { method: "GET" });
+            console.log(res);
+            loadMessages(res.conversation_id);
+        } catch (err) {
+            console.error("Error fetching messages:", err.message);
+        }
+    }
+
 
     // Debounce function: delays execution until user stops typing
     function debounce(fn, delay) {
@@ -251,21 +260,20 @@
             }
 
             // Populate results
-            results.forEach(user => {
+            Object.entries(results).forEach(([user_id, name]) => {
                 const div = document.createElement('div');
-                div.textContent = user;
+                div.textContent = name; // show the user's name
                 div.className = 'px-3 py-2 search-item';
                 div.style.cursor = 'pointer';
 
-                // Optional: click to select user
                 div.addEventListener('click', () => {
-                    document.getElementById('searchInput').value = user;
-                    resultsContainer.style.display = 'none';
-                    console.log('User selected:', user);
+                    createOrOpenChat(user_id);
                 });
 
                 resultsContainer.appendChild(div);
             });
+
+
 
             resultsContainer.style.display = 'block';
         } catch (err) {
