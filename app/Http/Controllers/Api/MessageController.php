@@ -115,9 +115,11 @@ public function sendMessage(Request $request){
             })->with('user')
             ->first();
         $conversationId = $commonConversation->conversation_id??null;
-        $name=User::find($user_id)->name;
+        $name="Unknown";
+        if(User::where('id',$user_id)->exists()){
+            $name=User::find($user_id)->name;
+        }
         $id=$user_id;
-
         if(!$commonConversation) {
             $conv = Conversation::create([
                 'type' => "private"
@@ -127,7 +129,7 @@ public function sendMessage(Request $request){
                 'conversation_id' => $conv->id,
                 "user_id" =>Auth::id()
             ]);
-          $mainUser=  ConUser::create([
+          ConUser::create([
                 'conversation_id' => $conv->id,
                 "user_id" =>$user_id
             ]);
