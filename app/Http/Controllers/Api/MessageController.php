@@ -45,6 +45,16 @@ public function sendMessage(Request $request){
         $userId=Auth::id();
         $conversation_id=$request->conversation_id;
         $message=$request->message;
+
+        // Validate message content
+        $maxLength = 1000;
+        if (empty($message) || !is_string($message) || trim($message) === '') {
+            return response()->json(['error' => 'Message cannot be empty.'], 422);
+        }
+        if (mb_strlen($message) > $maxLength) {
+            return response()->json(['error' => 'Message exceeds maximum length of ' . $maxLength . ' characters.'], 422);
+        }
+
         if($conversation_id<1){
             return response()->json(['error' => 'Fuck you cheap hacker'], 403);
         }
