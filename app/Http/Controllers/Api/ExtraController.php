@@ -21,7 +21,9 @@ class ExtraController extends Controller{
         $users=User::where('name','like','%'.$searchTerm.'%')
             ->limit(10)
             ->get()
-            ->pluck('name');
+            ->pluck('name','id');
+
+
         return response()->json($users,200);
     }
     public function getSidebar(Request $request)
@@ -55,6 +57,7 @@ class ExtraController extends Controller{
         $message->setCollection($transformed);
         return response()->json($message);
     }
+
 
 
 

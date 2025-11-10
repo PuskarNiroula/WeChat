@@ -16,6 +16,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(MessageController::class)->group(function () {
         Route::get('/getMessages/{id}', 'getChunkMessages')->name('getMessages');
         Route::post('/sendMessage', 'sendMessage')->name('sendMessage');
+        Route::get("/openChat/{id}","createOrFindConversation")->name("openChat");
     });
     Route::controller(ExtraController::class)->group(function () {
         Route::get('/search/{string}', 'search')->name('searchUsers');
