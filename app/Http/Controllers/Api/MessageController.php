@@ -3,7 +3,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ConUser;
 use App\Models\Conversation;
+use App\Models\LastMessage;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,6 +32,12 @@ class MessageController extends Controller
         $messages = Message::where('conversation_id', $conversationId)
             ->orderBy('created_at', 'desc')
             ->paginate(20);
+        foreach ($messages as $message) {
+            if($message->sender_id!==Auth::id()){
+                $message->is_read=1;
+                $message->save();
+            }
+        }
         $transformed = $messages->getCollection()->map(function ($item) {
 
             return [
@@ -60,12 +68,21 @@ public function sendMessage(Request $request){
             return response()->json(['error' => 'Fuck you cheap hacker'], 403);
         }
         if(ConUser::where('conversation_id',$conversation_id)->where('user_id',$userId)->exists()){
-            Message::create([
+           $message= Message::create([
                 'sender_id'=>$userId,
                 'message'=>$message,
                 'conversation_id'=>$conversation_id,
             ]);
-
+           $latestMessage=LastMessage::where('conversation_id',$conversation_id)->first();
+           if(!$latestMessage){
+               LastMessage::create([
+                   'conversation_id'=>$conversation_id,
+                   'message_id'=>$message->id,
+               ]);
+           }else{
+               $latestMessage->message_id=$message->id;
+               $latestMessage->save();
+           }
             return response()->json(['message'=>'Message sent successfully'],200);
         }
         return response()->json(['error' => 'Fuck you a bit educated hacker, try harder next time i have left 2 loop holes'], 403);
@@ -90,15 +107,19 @@ public function sendMessage(Request $request){
         }
 
         $commonConversation =ConUser::
-            select('conversation_id')
-            ->where('user_id', $myId)
+            where('user_id', $myId)
             ->whereIn('conversation_id', function ($query) use ($user_id) {
                 $query->select('conversation_id')
                     ->from('conversation_user')
                     ->where('user_id', $user_id);
-            })
+            })->with('user')
             ->first();
         $conversationId = $commonConversation->conversation_id??null;
+        $name="Unknown";
+        if(User::where('id',$user_id)->exists()){
+            $name=User::find($user_id)->name;
+        }
+        $id=$user_id;
         if(!$commonConversation) {
             $conv = Conversation::create([
                 'type' => "private"
@@ -108,14 +129,17 @@ public function sendMessage(Request $request){
                 'conversation_id' => $conv->id,
                 "user_id" =>Auth::id()
             ]);
-            ConUser::create([
+          ConUser::create([
                 'conversation_id' => $conv->id,
                 "user_id" =>$user_id
             ]);
+
             $conversationId=$conv->id;
         }
             return response()->json([
-                'conversation_id' => $conversationId
+                'conversation_id' => $conversationId,
+                'name'=>$name,
+                'id'=>$id,
             ]);
     }
 
