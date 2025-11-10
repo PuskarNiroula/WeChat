@@ -4,6 +4,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ConUser;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -90,15 +91,17 @@ public function sendMessage(Request $request){
         }
 
         $commonConversation =ConUser::
-            select('conversation_id')
-            ->where('user_id', $myId)
+            where('user_id', $myId)
             ->whereIn('conversation_id', function ($query) use ($user_id) {
                 $query->select('conversation_id')
                     ->from('conversation_user')
                     ->where('user_id', $user_id);
-            })
+            })->with('user')
             ->first();
         $conversationId = $commonConversation->conversation_id??null;
+        $name=User::find($user_id)->name;
+        $id=$user_id;
+
         if(!$commonConversation) {
             $conv = Conversation::create([
                 'type' => "private"
@@ -108,14 +111,17 @@ public function sendMessage(Request $request){
                 'conversation_id' => $conv->id,
                 "user_id" =>Auth::id()
             ]);
-            ConUser::create([
+          $mainUser=  ConUser::create([
                 'conversation_id' => $conv->id,
                 "user_id" =>$user_id
             ]);
+
             $conversationId=$conv->id;
         }
             return response()->json([
-                'conversation_id' => $conversationId
+                'conversation_id' => $conversationId,
+                'name'=>$name,
+                'id'=>$id,
             ]);
     }
 

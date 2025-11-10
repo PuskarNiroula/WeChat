@@ -93,7 +93,7 @@
         <div class="chat-header">
             <img src="https://i.pravatar.cc/50?img=1" alt="Avatar">
             <div>
-                <h6 class="m-0">Samana</h6>
+                <h6 class="m-0" id="chat_user">Samana</h6>
                 <small>Online</small>
             </div>
         </div>
@@ -116,9 +116,11 @@
 <script>
     let conId=null;
     const myId=`{{Auth::id()}}`;
+    let ChatUser=document.getElementById('chat_user');
 
     async function loadMessages(conversationId) {
         try {
+            conId = conversationId;
             const res = await secureFetch(`/getMessages/${conversationId}`, { method: "GET" });
 
             // Handle both array and object responses
@@ -132,7 +134,6 @@
                 return;
             }
 
-            // Reverse messages so latest appears at bottom
             messages.slice().reverse().forEach(msg => {
                 const isOwnMessage = msg.sender_id === parseInt(myId); // myId = logged-in user id
                 const messageClass = isOwnMessage ? 'sent' : 'received';
@@ -153,8 +154,7 @@
             // Scroll to bottom so latest messages are visible
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
-            // Save current conversation ID for sending messages
-            conId = conversationId;
+
 
         } catch (err) {
             console.error("Error fetching messages:", err.message);
@@ -183,7 +183,7 @@
         </div>
     `;
                 chatItem.addEventListener('click', () => {
-                    loadMessages(user.conversation_id);
+                    createOrOpenChat(user.chat_member_id);
                 });
 
                 chatList.appendChild(chatItem);
@@ -212,6 +212,8 @@
                     conversation_id:conId,
                 }
             });
+            loadMessages(conId);
+            document.getElementById("message_to_be_sent").value = "";
     }catch (Exception){
         console.log(Exception);
         }
@@ -220,8 +222,10 @@
     async function createOrOpenChat(user_id) {
         try {
             const res = await secureFetch(`/openChat/${user_id}`, { method: "GET" });
+            ChatUser.innerHTML = res.name;
             console.log(res);
             loadMessages(res.conversation_id);
+            loadSidebar();
         } catch (err) {
             console.error("Error fetching messages:", err.message);
         }
