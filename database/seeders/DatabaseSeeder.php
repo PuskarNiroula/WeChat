@@ -22,7 +22,8 @@ class DatabaseSeeder extends Seeder
 //            UserSeeder::class,
 //            CoversationSeeder::class,
 //            CoversationUserSeeder::class,
-            MessageSeeder::class,
+//            MessageSeeder::class,
+        LastSeeder::class,
         ]);
     }
 }

@@ -15,10 +15,11 @@ Route::controller(AuthController::class)->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::controller(MessageController::class)->group(function () {
         Route::get('/getMessages/{id}', 'getChunkMessages')->name('getMessages');
+        Route::post('/sendMessage', 'sendMessage')->name('sendMessage');
     });
     Route::controller(ExtraController::class)->group(function () {
         Route::get('/search/{string}', 'search')->name('searchUsers');
-        ROute::get("/getSidebarMembers","getSidebar")->name("getSidebarMembers");
+        Route::get("/getSidebarMembers","getSidebar")->name("getSidebarMembers");
     });
 });
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ConUser;
 use App\Models\Conversation;
+use App\Models\LastMessage;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -25,33 +26,34 @@ class ExtraController extends Controller{
     }
     public function getSidebar(Request $request)
     {
-        $userId = Auth::id();
-        $perPage = 10;
-        $page=$request->get('page', 1);
+        $id=Auth::id();
+        $con_id=ConUser::where("user_id",$id)->pluck("conversation_id");
+        $message=LastMessage::whereIn('conversation_id',$con_id)
+            ->orderBy('created_at','desc')
+            ->with(['message',"user"])
+            ->paginate(10);
+        $transformed = $message->getCollection()->map(function ($item) {
 
-        // Step 1: Get conversation IDs
-        $conversationIds = ConUser::where('user_id', $userId)
-            ->pluck('conversation_id');
 
-        // Step 2: Fetch all messages for those conversations
-        $messages = Message::whereIn('conversation_id', $conversationIds)
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->unique('conversation_id')
-            ->values();
-
-        // Step 3: Manually paginate
-        $total = $messages->count();
-        $paginated = $messages->forPage($page, $perPage)->values();
-
-        // Step 4: Prepare response with pagination info
-        return response()->json([
-            'data' => $paginated,
-            'current_page' => (int) $page,
-            'per_page' => $perPage,
-            'total' => $total,
-            'last_page' => ceil($total / $perPage),
-        ]);
+            foreach ($item->message->conversation->conUsers as $conv) {
+                if ($conv->user_id !== Auth::id()) {
+                    $memberId=$conv->user->id;
+                    $memberName=$conv->user->name;
+                    break;
+                }
+            }
+            return [
+                'conversation_id' => $item->conversation_id,
+                'last_message' => $item->message->message ?? null,
+                "is_read" => $item->message->is_read,
+                'last_message_time' => $item->message->created_at,
+                'last_message_sender' => $item->message->user->id==Auth::id()?"Myself":$item->message->user->name,
+                'chat_member' => $memberName,
+                'chat_member_id' => $memberId,
+            ];
+        });
+        $message->setCollection($transformed);
+        return response()->json($message);
     }
 
 

@@ -9,6 +9,13 @@ class Conversation extends Model
     protected $guarded=[];
 
     public function conUsers(){
-        $this->hasMany(ConUser::class);
+     return $this->hasMany(ConUser::class,"conversation_id",'id');
     }
+    public function messages(){
+      return  $this->hasMany(Message::class);
+    }
+    public function lastMessage(){
+      return  $this->hasOne(LastMessage::class);
+    }
+
 }
