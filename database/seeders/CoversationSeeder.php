@@ -12,9 +12,15 @@ class CoversationSeeder extends Seeder
      */
     public function run(): void
     {
-            Conversation::create([
-                'type'=>"private"
-        ]);
 
+              Conversation::create([
+                  'type'=>"private"
+              ]);
+        Conversation::create([
+            'type'=>"private"
+        ]);
+        Conversation::create([
+            'type'=>"private"
+        ]);
     }
 }

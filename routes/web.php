@@ -18,3 +18,5 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get("/dashboard","dashboard")->name("dashboard");
     });
 });
+
+Route::get("/test",[\App\Http\Controllers\Api\ExtraController::class,"getSidebar"])->name("getSidebarMembers");

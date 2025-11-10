@@ -13,13 +13,31 @@ class CoversationUserSeeder extends Seeder
      */
     public function run(): void
     {
+
+            ConUser::create([
+                "conversation_id"=>1,
+                "user_id"=>1,
+            ]);
+            ConUser::create([
+                "conversation_id"=>1,
+                "user_id"=>2,
+            ]);
         ConUser::create([
-            "conversation_id"=>1,
+            "conversation_id"=>2,
             "user_id"=>1,
         ]);
         ConUser::create([
-            "conversation_id"=>1,
+            "conversation_id"=>2,
+            "user_id"=>3,
+        ]);
+        ConUser::create([
+            "conversation_id"=>3,
             "user_id"=>2,
         ]);
+        ConUser::create([
+            "conversation_id"=>3,
+            "user_id"=>4,
+        ]);
+
     }
 }

@@ -13,15 +13,33 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        $users=[
+            [
+                'name'=>"Puskar Niroula",
+                "email"=>"puskar@gmail.com",
+                "password"=>"password",
+            ],
+            [
+                'name'=>"Samana Dahal",
+                "email"=>"samana@gmail.com",
+                "password"=>"password",
+            ],
+            [
+                'name'=>"Ram Bahadur",
+                "email"=>"ram@gmail.com",
+                "password"=>"password",
+            ],
+            [
+                'name'=>"Sita Kumari",
+                "email"=>"sita@gmail.com",
+                "password"=>"password",
+            ],
 
 
-      for($i=1;$i<16;$i++){
-          User::create([
-              "name"=>"Ram-".$i,
-              "email"=>"ram$i@gmail.com",
-              "password"=>"Password@123"
-          ]);
-      }
+        ];
+        foreach ($users as $user){
+            User::create($user);
+        }
 
     }
 }

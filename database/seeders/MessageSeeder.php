@@ -13,15 +13,32 @@ class MessageSeeder extends Seeder
      */
     public function run(): void
     {
+
+            Message::create([
+                'conversation_id' => 1,
+                'sender_id' => 1,
+                "message" => "Hello hy"
+            ]);
+            Message::create([
+                'conversation_id' => 1,
+                'sender_id' => 2,
+                "message" => "Yes vanana"
+            ]);
         Message::create([
-            'conversation_id'=>3,
-            'sender_id'=>3,
-            "message"=>"How are you? "
+            'conversation_id' => 1,
+            'sender_id' => 1,
+            "message" => "Oii Khaali xas?"
         ]);
         Message::create([
-            'conversation_id'=>3,
-            'sender_id'=>4,
-            "message"=>"I am Fine what about you?"
+            'conversation_id' => 1,
+            'sender_id' => 2,
+            "message" => "Nai yrr"
         ]);
+        Message::create([
+            'conversation_id' => 3,
+            'sender_id' => 2,
+            "message" => "Oii sunana"
+        ]);
+
     }
 }
