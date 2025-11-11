@@ -12,7 +12,6 @@ class TestEvent implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public string $message="hello";
-    public $broadcastQueue = null;
 
     public function __construct($message)
     {
