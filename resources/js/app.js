@@ -26,7 +26,7 @@ window.Echo.private(`Message-Channel.${myId}`)
     .listen(".message-sent", (e) => {
         console.log('received');
 
-        if (toString(e.receiver_id)===toString(myId)){
+        if (String(e.receiver_id)===String(myId)){
             loadSidebar();
         }
         if(e.conversation_id===conId){

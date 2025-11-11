@@ -4,9 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ConUser;
-use App\Models\Conversation;
 use App\Models\LastMessage;
-use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,14 +27,13 @@ class ExtraController extends Controller{
     {
         $userId = Auth::id();
 
-        // Get all conversation IDs of the user
         $conversationIds = ConUser::where('user_id', $userId)->pluck('conversation_id');
 
-        // Get the latest message for each conversation
         $messages = LastMessage::whereIn('conversation_id', $conversationIds)
             ->with(['message.user', 'message.conversation.conUsers'])
             ->orderBy('updated_at', 'desc')
             ->get()
+            ->filter(fn($item) => $item->message !== null)
             ->unique('conversation_id');
 
         // Transform for frontend
@@ -62,7 +59,7 @@ class ExtraController extends Controller{
             ];
         });
 
-        return response()->json($transformed->values()); // reset keys for frontend
+        return response()->json($transformed->values());
     }
 
 

@@ -33,12 +33,10 @@ class MessageController extends Controller
         $messages = Message::where('conversation_id', $conversationId)
             ->orderBy('created_at', 'desc')
             ->paginate(50);
-        foreach ($messages as $message) {
-            if($message->sender_id!==Auth::id()){
-                $message->is_read=1;
-                $message->save();
-            }
-        }
+        Message::where('conversation_id', $conversationId)
+            ->where('sender_id', '!=', Auth::id())
+            ->where('is_read', 0)
+            ->update(['is_read' => 1]);
         $transformed = $messages->getCollection()->map(function ($item) {
 
             return [
