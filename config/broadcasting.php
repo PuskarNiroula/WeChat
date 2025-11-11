@@ -35,9 +35,6 @@ return [
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
                 'useTLS' => true,
-                'curl_options' => [
-                    CURLOPT_SSL_VERIFYPEER => false,
-                ],
             ],
         ],
 
