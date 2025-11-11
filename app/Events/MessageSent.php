@@ -22,7 +22,9 @@ class MessageSent
         $this->message = $message;
         $this->sender_id = $sender_id;
         $this->receiver_id = $receiver_id;
-        Log::info('📡 MessageSent event triggered!', ['message' => $message]);
+        if (config('app.debug')) {
+            Log::info('📡 MessageSent event triggered!', ['message' => $message]);
+        }
     }
 
     /**
