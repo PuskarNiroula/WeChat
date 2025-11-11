@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,88 +8,17 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{asset('css/custom.css')}}">
     <script src="{{asset('js/script.js')}}"></script>
-    <style>
-        .chat-messages {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            background-color: #f9f9f9;
-        }
-
-        .chat-messages {
-            display: flex;
-            flex-direction: column-reverse;
-            padding: 10px;
-            overflow-y: auto;
-            height: calc(100vh - 180px); /* adjust as needed */
-            background-color: #f5f5f5;
-        }
-
-        /* Common message style */
-        .message {
-            display: flex;
-            margin: 5px 0;
-        }
-
-        /* Chat message bubbles directly */
-        .message-bubble {
-            display: inline-block;
-            max-width: 70%;
-            padding: 10px 14px;
-            border-radius: 10px;
-            word-wrap: break-word;
-            font-size: 14px;
-            line-height: 1.4;
-            margin: 5px 0;
-            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-        }
-
-        /* Sent messages (align right, green) */
-        .message-bubble.sent {
-            background-color: #dcf8c6;
-            align-self: flex-end;
-            border-bottom-right-radius: 0;
-        }
-
-        /* Received messages (align left, white) */
-        .message-bubble.received {
-            background-color: #ffffff;
-            align-self: flex-start;
-            border-bottom-left-radius: 0;
-        }
-
-        /* Ensure vertical stacking and alignment works */
-        .chat-messages {
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        /* Message text and time */
-        .message-bubble p {
-            margin: 0;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        .message-bubble small {
-            display: block;
-            text-align: right;
-            font-size: 11px;
-            color: #999;
-            margin-top: 4px;
-        }
 
 
 
 
 
-    </style>
 
+    {{--    @vite('resources/js/app.js')--}}
 </head>
 
 <body>
+
 <div class="chat-container">
 
     {{-- Sidebar --}}
@@ -143,8 +73,12 @@
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+@vite('resources/js/app.js')
+
+
 <script>
+
+
     let conId=null;
     const myId=`{{Auth::id()}}`;
     let ChatUser=document.getElementById('chat_user');
@@ -339,6 +273,7 @@
         }
     });
 </script>
+</body>
 
 </html>
 

@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Events\MessageSent;
 
 class MessageController extends Controller
 {
@@ -67,6 +68,7 @@ public function sendMessage(Request $request){
         if($conversation_id<1){
             return response()->json(['error' => 'Fuck you cheap hacker'], 403);
         }
+        $receiver_id=ConUser::where('conversation_id',$conversation_id)->where('user_id','!=',$userId)->pluck('user_id')->first();
         if(ConUser::where('conversation_id',$conversation_id)->where('user_id',$userId)->exists()){
            $message= Message::create([
                 'sender_id'=>$userId,
@@ -83,6 +85,7 @@ public function sendMessage(Request $request){
                $latestMessage->message_id=$message->id;
                $latestMessage->save();
            }
+           broadcast(new MessageSent($message,Auth::id(),$receiver_id))->toOthers();
             return response()->json(['message'=>'Message sent successfully'],200);
         }
         return response()->json(['error' => 'Fuck you a bit educated hacker, try harder next time i have left 2 loop holes'], 403);

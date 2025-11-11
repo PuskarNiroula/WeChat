@@ -1,8 +1,15 @@
 <?php
 
+
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/fire-test', function () {
+    event(new App\Events\TestEvent("Hello from Laravel!"));
+    return "Event fired!";
+});
+
 
 Route::get('/', function () {
     return redirect()->route('loginPage');
