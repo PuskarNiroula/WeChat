@@ -1,0 +1,25 @@
+{
+  "hash": "7adbba69",
+  "configHash": "4e835004",
+  "lockfileHash": "7e5f9bec",
+  "browserHash": "ef6e94cf",
+  "optimized": {
+    "laravel-echo": {
+      "src": "../../node_modules/laravel-echo/dist/echo.js",
+      "file": "laravel-echo.js",
+      "fileHash": "cdd44421",
+      "needsInterop": false
+    },
+    "pusher-js": {
+      "src": "../../node_modules/pusher-js/dist/web/pusher.js",
+      "file": "pusher-js.js",
+      "fileHash": "c1add1a3",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "chunk-BUSYA2B4": {
+      "file": "chunk-BUSYA2B4.js"
+    }
+  }
+}

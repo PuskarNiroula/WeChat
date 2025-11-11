@@ -28,35 +28,44 @@ class ExtraController extends Controller{
     }
     public function getSidebar(Request $request)
     {
-        $id=Auth::id();
-        $con_id=ConUser::where("user_id",$id)->pluck("conversation_id");
-        $message=LastMessage::whereIn('conversation_id',$con_id)
-            ->orderBy('created_at','desc')
-            ->with(['message',"user"])
-            ->paginate(10);
-        $transformed = $message->getCollection()->map(function ($item) {
+        $userId = Auth::id();
 
+        // Get all conversation IDs of the user
+        $conversationIds = ConUser::where('user_id', $userId)->pluck('conversation_id');
+
+        // Get the latest message for each conversation
+        $messages = LastMessage::whereIn('conversation_id', $conversationIds)
+            ->with(['message.user', 'message.conversation.conUsers'])
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->unique('conversation_id'); // keep only one per conversation
+
+        // Transform for frontend
+        $transformed = $messages->map(function ($item) use ($userId) {
+            $memberName = $memberId = null;
 
             foreach ($item->message->conversation->conUsers as $conv) {
-                if ($conv->user_id !== Auth::id()) {
-                    $memberId=$conv->user->id;
-                    $memberName=$conv->user->name;
+                if ($conv->user_id != $userId) {
+                    $memberId = $conv->user->id;
+                    $memberName = $conv->user->name;
                     break;
                 }
             }
+
             return [
                 'conversation_id' => $item->conversation_id,
                 'last_message' => $item->message->message ?? null,
-                "is_read" => $item->message->is_read,
-                'last_message_time' => $item->message->created_at,
-                'last_message_sender' => $item->message->user->id==Auth::id()?"Myself":$item->message->user->name,
+                'is_read' => $item->message->is_read ?? null,
+                'last_message_time' => $item->message->created_at ?? null,
+                'last_message_sender' => $item->message->user->id == $userId ? 'Myself' : $item->message->user->name,
                 'chat_member' => $memberName,
                 'chat_member_id' => $memberId,
             ];
         });
-        $message->setCollection($transformed);
-        return response()->json($message);
+
+        return response()->json($transformed->values()); // reset keys for frontend
     }
+
 
 
 

@@ -130,7 +130,7 @@
             const chatList = document.querySelector('.chat-list');
             chatList.innerHTML = '';
 
-            users.data.forEach(user => {
+            users.forEach(user => {
                 const username = user.chat_member  || 'Unknown User';
                 const lastMessage = user.last_message || 'No message yet';
                 const avatar = `https://i.pravatar.cc/50?u=${user.chat_member_id}`; // generates unique avatar per user
