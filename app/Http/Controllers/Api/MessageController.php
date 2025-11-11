@@ -32,7 +32,7 @@ class MessageController extends Controller
 
         $messages = Message::where('conversation_id', $conversationId)
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(50);
         foreach ($messages as $message) {
             if($message->sender_id!==Auth::id()){
                 $message->is_read=1;
@@ -85,7 +85,7 @@ public function sendMessage(Request $request){
                $latestMessage->message_id=$message->id;
                $latestMessage->save();
            }
-           broadcast(new MessageSent($message,Auth::id(),$receiver_id))->toOthers();
+           broadcast(new MessageSent($receiver_id,$conversation_id))->toOthers();
             return response()->json(['message'=>'Message sent successfully'],200);
         }
         return response()->json(['error' => 'Fuck you a bit educated hacker, try harder next time i have left 2 loop holes'], 403);

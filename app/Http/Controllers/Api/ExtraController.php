@@ -11,7 +11,6 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class ExtraController extends Controller{
     public function search(string $searchTerm):JsonResponse{
@@ -38,7 +37,7 @@ class ExtraController extends Controller{
             ->with(['message.user', 'message.conversation.conUsers'])
             ->orderBy('updated_at', 'desc')
             ->get()
-            ->unique('conversation_id'); // keep only one per conversation
+            ->unique('conversation_id');
 
         // Transform for frontend
         $transformed = $messages->map(function ($item) use ($userId) {
