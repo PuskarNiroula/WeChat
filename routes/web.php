@@ -21,7 +21,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::controller(HomeController::class)->group(function () {
         Route::get("/dashboard","dashboard")->name("dashboard");
+        Route::get('/profile','profile')->name('profile');
     });
 });
-
-Route::get('/profile', [HomeController::class,'profile'])->name('profile');

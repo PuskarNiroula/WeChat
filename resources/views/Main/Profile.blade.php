@@ -104,17 +104,17 @@
 
             const formData = new FormData();
             formData.append('name', name);
-            formData.append('avatar', fileInputElement.files[0]);
+            if (fileInputElement.files && fileInputElement.files[0]) {
+                formData.append('avatar', fileInputElement.files[0]);
+            }
 
-            const response = await secureFetchWithFiles('/updateProfile', {
+            const response = await secureFetch('/updateProfile', {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json' // Do NOT set Content-Type manually
                 },
                 body: formData
             });
-
-            console.log( response);
         });
 
     </script>

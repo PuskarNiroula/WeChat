@@ -178,8 +178,8 @@
                 loadMessages(conId);
                 loadSidebar();
                 document.getElementById("message_to_be_sent").value = "";
-            }catch (Exception){
-                console.log(Exception);
+            }catch (err){
+                console.log(err);
             }
         }
 
@@ -187,7 +187,6 @@
             try {
                 const res = await secureFetch(`/openChat/${user_id}`, { method: "GET" });
                 ChatUser.innerHTML = res.name;
-                console.log(res.avatar)
                 if(res.avatar != null){
                     $('#avatar-pic').attr('src', '/images/avatars/' + res.avatar);
                 }

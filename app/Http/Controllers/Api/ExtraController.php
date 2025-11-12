@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ConUser;
 use App\Models\LastMessage;
 use App\Models\User;
-use Illuminate\Http\JsonResponse;;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
 class ExtraController extends Controller{
