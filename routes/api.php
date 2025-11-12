@@ -24,7 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/search/{string}', 'search')->name('searchUsers');
         Route::get("/getSidebarMembers","getSidebar")->name("getSidebarMembers");
     });
-    Route::post('/updateProfile',ProfileController::class.'@updateProfile')->name('updateProfile');
+    Route::post('/updateProfile',[ProfileController::class,'updateProfile'])->name('updateProfile');
 });
 
 
