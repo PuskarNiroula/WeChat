@@ -35,10 +35,10 @@
         {{-- Chat area --}}
         <div id="start-chatting" class="chat-area flex-grow-1 d-flex flex-column" style="display: none ! important;">
             <div class="chat-header d-flex align-items-center p-3 border-bottom bg-light">
-                <img src="https://i.pravatar.cc/50?img=1" alt="Avatar" class="rounded-circle me-2">
+                <img id="avatar-pic" src="{{asset('/images/avatars/avatar.jpg')}}" alt="Avatar" class="rounded-circle me-2">
                 <div>
-                    <h6 class="m-0" id="chat_user">Samana</h6>
-                    <small>Online</small>
+                    <h6 class="m-0" id="chat_user"></h6>
+                    <small></small>
                 </div>
             </div>
 
@@ -61,12 +61,10 @@
 
 
 @section('scripts')
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{asset('/js/script.js')}}"></script>
-
 
     <script>
         let conId=null;
@@ -133,7 +131,7 @@
                 users.forEach(user => {
                     const username = user.chat_member  || 'Unknown User';
                     const lastMessage = user.last_message || 'No message yet';
-                    const avatar = `https://i.pravatar.cc/50?u=${user.chat_member_id}`; // generates unique avatar per user
+                    const avatar ="/images/avatars/"+user.avatar; // generates unique avatar per user
 
                     const isUnread = user.last_message_sender !== 'Myself' && user.is_read===0;
                     const messageColor = isUnread ? 'red' : 'black';
@@ -189,6 +187,10 @@
             try {
                 const res = await secureFetch(`/openChat/${user_id}`, { method: "GET" });
                 ChatUser.innerHTML = res.name;
+                console.log(res.avatar)
+                if(res.avatar != null){
+                    $('#avatar-pic').attr('src', '/images/avatars/' + res.avatar);
+                }
                 loadMessages(res.conversation_id);
                 loadSidebar();
             } catch (err) {

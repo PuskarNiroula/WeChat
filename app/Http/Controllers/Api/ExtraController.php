@@ -6,8 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ConUser;
 use App\Models\LastMessage;
 use App\Models\User;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;;
 use Illuminate\Support\Facades\Auth;
 
 class ExtraController extends Controller{
@@ -23,7 +22,7 @@ class ExtraController extends Controller{
 
         return response()->json($users,200);
     }
-    public function getSidebar(Request $request)
+    public function getSidebar()
     {
         $userId = Auth::id();
 
@@ -44,6 +43,7 @@ class ExtraController extends Controller{
                 if ($conv->user_id != $userId) {
                     $memberId = $conv->user->id;
                     $memberName = $conv->user->name;
+                    $avatar=$conv->user->avatar;
                     break;
                 }
             }
@@ -56,6 +56,7 @@ class ExtraController extends Controller{
                 'last_message_sender' => $item->message->user->id == $userId ? 'Myself' : $item->message->user->name,
                 'chat_member' => $memberName,
                 'chat_member_id' => $memberId,
+                "avatar"=>$avatar??"avatar.jpg",
             ];
         });
 

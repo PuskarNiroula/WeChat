@@ -8,20 +8,17 @@
         <div class="card profile-card shadow-sm p-4" style="max-width: 500px; width: 100%; border-radius: 15px;">
             <h3 class="text-center mb-4">Update Profile</h3>
 
-            <form action="#" method="POST" enctype="multipart/form-data">
-                @csrf
-                @method('PUT')
-
+            <form id="profileForm" method="POST" enctype="multipart/form-data">
                 <div class="text-center mb-4">
                     <label for="profile_picture" class="profile-picture-wrapper">
-                        <img id="profilePreview" src="/" class="rounded-circle"
+                        <img id="profilePreview" src="/images/avatars/{{Auth::user()->avatar}}" class="rounded-circle"
                              style="object-fit: cover; border: 2px solid #0d6efd;  cursor: pointer;">
 
                         <div class="overlay">
                             <i class="bi bi-camera-fill"></i>
                         </div>
                     </label>
-                    <input type="file" name="profile_picture" id="profile_picture" class="d-none" accept="image/*" onchange="previewImage(event)">
+                    <input type="file" name="avatar" id="profile_picture" class="d-none" accept="image/*" onchange="previewImage(event)">
                 </div>
 
                 <div class="mb-3">
@@ -98,5 +95,27 @@
             };
             reader.readAsDataURL(event.target.files[0]);
         }
+        $('#profileForm').submit(async function(e) {
+            e.preventDefault();
+
+            const name = $('#name').val(); // Get name
+            const fileInputElement = $('#profile_picture')[0]; // File input
+
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('avatar', fileInputElement.files[0]);
+
+            const response = await secureFetchWithFiles('/updateProfile', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json' // Do NOT set Content-Type manually
+                },
+                body: formData
+            });
+
+            console.log( response);
+        });
+
     </script>
 @endsection

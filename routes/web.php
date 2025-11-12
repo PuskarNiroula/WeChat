@@ -24,7 +24,4 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
-Route::get("/test",[ExtraController::class,"getSidebar"])->name("getSidebarMembers");
-Route::get("/test2",function(){
-    return view("/main/profile");
-});
+Route::get('/profile', [HomeController::class,'profile'])->name('profile');

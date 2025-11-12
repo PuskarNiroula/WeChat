@@ -3,7 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ExtraController;
 use App\Http\Controllers\Api\MessageController;
-use Illuminate\Support\Facades\Broadcast;
+use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/search/{string}', 'search')->name('searchUsers');
         Route::get("/getSidebarMembers","getSidebar")->name("getSidebarMembers");
     });
+    Route::post('/updateProfile',ProfileController::class.'@updateProfile')->name('updateProfile');
 });
 
 

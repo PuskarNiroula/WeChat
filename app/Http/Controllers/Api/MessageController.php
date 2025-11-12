@@ -118,7 +118,9 @@ public function sendMessage(Request $request){
         $conversationId = $commonConversation->conversation_id??null;
         $name="Unknown";
         if(User::where('id',$user_id)->exists()){
-            $name=User::find($user_id)->name;
+            $user=User::find($user_id);
+            $name=$user->name;
+            $avatar=$user->avatar;
         }
         $id=$user_id;
         if(!$commonConversation) {
@@ -141,6 +143,7 @@ public function sendMessage(Request $request){
                 'conversation_id' => $conversationId,
                 'name'=>$name,
                 'id'=>$id,
+                'avatar'=>$avatar??"avatar.jpg",
             ]);
     }
 

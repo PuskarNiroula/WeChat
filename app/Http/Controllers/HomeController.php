@@ -32,4 +32,7 @@ class HomeController extends Controller{
     public function dashboard(){
         return view('Main.dashboard');
     }
+    public function profile(){
+        return view('Main.profile');
+    }
 }

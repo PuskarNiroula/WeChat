@@ -66,8 +66,8 @@
     <div class="sidebar">
         <div class="top-links">
             <a href="/dashboard"><i class="bi bi-chat-dots"></i></a>
-            <a href="#"><i class="bi bi-person-circle"></i></a>
-            <a href="/test2"><i class="bi bi-bell"></i></a>
+            <a href="/profile"><i class="bi bi-person-circle"></i></a>
+            <a href="#"><i class="bi bi-bell"></i></a>
         </div>
 
         <div class="bottom-links">
@@ -82,6 +82,9 @@
     </div>
 
 </div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="{{asset('/js/script.js')}}"></script>
 
 @yield('scripts')
 </body>
