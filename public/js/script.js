@@ -5,33 +5,22 @@ function getToken() {
 
 // Secure fetch wrapper
 async function secureFetch(url, options = {}) {
-    // Ensure options object exists
-    options = options || {};
+    options = options || {}
+    options.headers = { ...(options.headers || {}) }
 
-    // Default headers
-    options.headers = options.headers || {};
+    const token = getToken()
+    if (token) options.headers.Authorization = `Bearer ${token}`
 
-    // Add token to Authorization header if exists
-    const token = getToken();
-    if (token) {
-        options.headers['Authorization'] = `Bearer ${token}`;
+    // Only stringify if it's a plain object, leave FormData as-is
+    if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
+        options.body = JSON.stringify(options.body)
+        options.headers['Content-Type'] = 'application/json'
     }
 
-    // If body is an object, stringify it and set Content-Type
-    if (options.body && typeof options.body === 'object') {
-        options.body = JSON.stringify(options.body);
-        options.headers['Content-Type'] = 'application/json';
-    }
-
-    // Perform fetch
-    const response = await fetch(url, options);
-
-    // Check for errors
+    const response = await fetch(url, options)
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Request failed');
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || 'Request failed')
     }
-
-    // Return JSON
-    return response.json();
+    return response.json()
 }
