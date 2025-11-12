@@ -100,16 +100,29 @@
                     const isOwnMessage = msg.sender_id === parseInt(myId); // myId = logged-in user id
                     const messageClass = isOwnMessage ? 'sent' : 'received';
 
+                    // Create main message container
                     const messageDiv = document.createElement('div');
                     messageDiv.classList.add('message-bubble', messageClass);
-                    messageDiv.innerHTML = `
-        <p class="mb-0">${msg.message}</p>
-        <small class="text-muted">
-            ${new Date(msg.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-        </small>
-    `;
+
+                    // Create message text node
+                    const messageText = document.createElement('p');
+                    messageText.classList.add('mb-0');
+                    messageText.textContent = msg.message; // Safe (no HTML injection)
+
+                    // Create time element
+                    const timeEl = document.createElement('small');
+                    timeEl.classList.add('text-muted');
+                    timeEl.textContent = new Date(msg.time).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    // Append safely
+                    messageDiv.appendChild(messageText);
+                    messageDiv.appendChild(timeEl);
                     chatMessages.appendChild(messageDiv);
                 });
+
 
 
                 chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -129,34 +142,55 @@
                 chatList.innerHTML = '';
 
                 users.forEach(user => {
-                    const username = user.chat_member  || 'Unknown User';
+                    const username = user.chat_member || 'Unknown User';
                     const lastMessage = user.last_message || 'No message yet';
-                    const avatar ="/images/avatars/"+user.avatar; // generates unique avatar per user
+                    const avatarPath = "/images/avatars/" + user.avatar;
 
-                    const isUnread = user.last_message_sender !== 'Myself' && user.is_read===0;
+                    const isUnread = user.last_message_sender !== 'Myself' && user.is_read === 0;
                     const messageColor = isUnread ? 'red' : 'black';
-                    const messageFont=isUnread ? 'bold' : 'normal';
+                    const messageFont = isUnread ? 'bold' : 'normal';
 
+                    // Create main chat item
                     const chatItem = document.createElement('div');
                     chatItem.classList.add('chat-item');
-                    chatItem.innerHTML = `
-        <img src="${avatar}" alt="Avatar">
-        <div class="chat-info">
-            <h6>${username}</h6>
-            <small style="color:${messageColor}; font-weight: ${messageFont}">${lastMessage}</small>
-        </div>
-    `;
+
+                    // Create and set avatar safely
+                    const avatarImg = document.createElement('img');
+                    avatarImg.src = avatarPath;
+                    avatarImg.alt = 'Avatar';
+
+                    // Chat info container
+                    const chatInfo = document.createElement('div');
+                    chatInfo.classList.add('chat-info');
+
+                    // Username
+                    const userNameEl = document.createElement('h6');
+                    userNameEl.textContent = username;
+
+                    // Last message
+                    const lastMsgEl = document.createElement('small');
+                    lastMsgEl.style.color = messageColor;
+                    lastMsgEl.style.fontWeight = messageFont;
+                    lastMsgEl.textContent = lastMessage;
+
+                    // Append everything safely
+                    chatInfo.appendChild(userNameEl);
+                    chatInfo.appendChild(lastMsgEl);
+                    chatItem.appendChild(avatarImg);
+                    chatItem.appendChild(chatInfo);
+
+                    // Add click event
                     chatItem.addEventListener('click', () => {
                         createOrOpenChat(user.chat_member_id);
                     });
 
                     chatList.appendChild(chatItem);
                 });
-
             } catch (error) {
                 console.error('Error loading sidebar:', error);
             }
         }
+
 
         // Call the function when page loads
         document.addEventListener('DOMContentLoaded', loadSidebar);
