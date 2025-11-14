@@ -81,7 +81,7 @@ return [
         ],
 
         RequestTerminated::class => [
-            // FlushUploadedFiles::class,
+             FlushUploadedFiles::class,
         ],
 
         TaskReceived::class => [
@@ -105,8 +105,8 @@ return [
         OperationTerminated::class => [
             FlushOnce::class,
             FlushTemporaryContainerInstances::class,
-            // DisconnectFromDatabases::class,
-            // CollectGarbage::class,
+             DisconnectFromDatabases::class,
+             CollectGarbage::class,
         ],
 
         WorkerErrorOccurred::class => [
