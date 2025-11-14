@@ -71,7 +71,11 @@
         </div>
 
         <div class="bottom-links">
-            <a href="#"><i class="bi bi-gear"></i></a>
+            <form method="POST" action="{{route('logout')}}">
+                @csrf
+                <button type="submit"><i class="bi bi-box-arrow-right"></i> Logout</button>
+            </form>
+
             <a href="#"><i class="bi bi-person"></i></a>
         </div>
     </div>

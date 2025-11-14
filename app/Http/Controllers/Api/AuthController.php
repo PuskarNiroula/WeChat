@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -55,12 +56,15 @@ class AuthController extends Controller
             ]);
         }
 
-        $token = $user->createToken('chatapp')->plainTextToken;
+        $token = $user->createToken("Chat Api");
+        $token->accessToken->expires_at = now()->addHours(2);
+        $token->accessToken->save();
 
         return response()->json([
             'user'=> $user,
-            'token'=> $token,
+            'token'=> $token->plainTextToken,
         ]);
+
     }
 
     // Logout user

@@ -15,6 +15,7 @@ Route::controller(AuthController::class)->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/api/logout', [AuthController::class, 'logout'])->name('api.logout');;
     Route::controller(MessageController::class)->group(function () {
         Route::get('/getMessages/{id}', 'getChunkMessages')->name('getMessages');
         Route::post('/sendMessage', 'sendMessage')->name('sendMessage');

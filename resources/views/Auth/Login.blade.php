@@ -87,9 +87,8 @@
 </div>
 <script>
     let csrf=`{{csrf_token()}}`;
-    console.log(csrf);
     document.getElementById('login-form').addEventListener('submit', async function(e) {
-        e.preventDefault(); // prevent normal form submission
+        e.preventDefault();
 
         const email = this.email.value;
         const password = this.password.value;
@@ -109,7 +108,6 @@
             if (response.ok) {
                 // Save bearer token in localStorage
                 localStorage.setItem('token', data.token);
-                alert('Login successful!');
                 window.location.href = '/dashboard';
             } else {
                 alert(data.message || 'Login failed!');
