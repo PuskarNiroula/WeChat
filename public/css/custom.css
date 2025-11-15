@@ -1,27 +1,66 @@
-body {
-    background-color: #eae6df;
+/* Global */
+body, html {
+    height: 100%;
+    margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    height: 100vh;
+    background-color: #eae6df;
     overflow: hidden;
 }
 
-.chat-container {
-    width: 100%;
-    height: 100vh;
+/* Main Container */
+.main-container, .chat-container {
     display: flex;
+    height: 100vh;
 }
 
 /* Sidebar */
 .sidebar {
-    background-color: #fff;
+    width: 80px;
+    background-color: #0d6efd;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+}
+
+.sidebar .top-links,
+.sidebar .bottom-links {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.sidebar a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.sidebar a:hover {
+    color: #cce5ff;
+}
+
+/* Main Content */
+.content, .chat-area {
+    flex-grow: 1;
+    background-color: #f0f2f5;
+    overflow-y: auto;
+}
+
+/* Chat Sidebar (left panel in chat) */
+.chat-sidebar {
     width: 30%;
+    background-color: #fff;
     border-right: 1px solid #ccc;
     display: flex;
     flex-direction: column;
 }
 
 .sidebar-header {
-    background-color: #f0f0f0; /* light gray like WhatsApp sidebar */
+    background-color: #f0f0f0;
 }
 
 .chat-list {
@@ -59,10 +98,10 @@ body {
 
 /* Chat Area */
 .chat-area {
-    background-color: #efeae2;
     flex: 1;
     display: flex;
     flex-direction: column;
+    background-color: #efeae2;
 }
 
 .chat-header {
@@ -87,7 +126,7 @@ body {
     padding: 20px;
     overflow-y: auto;
     background-color: #f5f5f5;
-    height: calc(100vh - 180px); /* adjust as needed */
+    height: calc(100vh - 180px);
 }
 
 /* Message bubbles */
@@ -103,14 +142,12 @@ body {
     box-shadow: 0 1px 1px rgba(0,0,0,0.1);
 }
 
-/* Sent messages */
 .message-bubble.sent {
     background-color: #dcf8c6;
     align-self: flex-end;
     border-bottom-right-radius: 0;
 }
 
-/* Received messages */
 .message-bubble.received {
     background-color: #ffffff;
     align-self: flex-start;
@@ -131,7 +168,7 @@ body {
     margin-top: 4px;
 }
 
-/* Chat input */
+/* Chat Input */
 .chat-input {
     background-color: #f0f2f5;
     padding: 10px;
@@ -152,8 +189,7 @@ body {
 
 .chat-input input:focus {
     border-color: #128c7e;
-    box-shadow: 0 0 5px rgba(18, 140, 126, 0.5);
-    width: 100%;
+    box-shadow: 0 0 5px rgba(18,140,126,0.5);
 }
 
 .chat-input button {
@@ -164,16 +200,58 @@ body {
     border-radius: 50%;
 }
 
-/* Icons */
-.bi-three-dots-vertical {
+/* Settings Dropdown */
+.settings {
+    position: relative;
+    display: inline-block;
+}
+
+#settingsToggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
     cursor: pointer;
 }
 
-/* Search items */
-.search-item:hover {
-    background-color: #f1f1f1;
+#settingsDropdown {
+    display: none;
+    position: absolute;
+    left: 100%; /* dropdown appears to the right */
+    top: -50px;
+    margin-left: 8px;
+    background-color: #fff;
+    min-width: 180px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    z-index: 1000;
 }
 
-h5 {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+#settingsDropdown a {
+    display: block;
+    padding: 12px 20px;
+    color: #128c7e;
+    text-decoration: none;
+    border-bottom: 1px solid #eee;
+    font-size: small;
+}
+
+#settingsDropdown a:hover {
+    background-color: #eee;
+}
+
+/* Misc */
+.bi-three-dots-vertical, .search-item:hover {
+    cursor: pointer;
+}
+#logout_buton{
+    border: none;
+    background: none;
+    color: white;
+    cursor: pointer;
+    font-size: 1.5rem;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
 }
