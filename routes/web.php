@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +20,10 @@ Route::controller(HomeController::class)->group(function () {
     Route::post('/register','registerWeb')->name('register');
 });
 Route::middleware('auth:sanctum')->group(function () {
+    Route::controller(SettingController::class)->group(function () {
+        Route::get('/change-password','gotoChangePassword')->name('changePassword');
+        Route::get('/change-email','gotoChangeEmail')->name('changeEmail');
+    });
     Route::controller(HomeController::class)->group(function () {
         Route::get("/dashboard","dashboard")->name("dashboard");
         Route::get('/profile','profile')->name('profile');
