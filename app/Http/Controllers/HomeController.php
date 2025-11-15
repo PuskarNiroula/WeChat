@@ -25,7 +25,7 @@ class HomeController extends Controller{
                 'message' => 'Invalid credentials'
             ], 401);
         }
-        if($request->user()->email_verified_at==null){
+        if(!$request->user()->hasVerfiedEmail()){
             return response()->json([
                 'status'=> "Error",
                 'message'=> "Please verify your email address to login"

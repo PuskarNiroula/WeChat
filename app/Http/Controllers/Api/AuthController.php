@@ -59,7 +59,7 @@ class AuthController extends Controller
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
-        if($user->email_verified_at==null){
+        if(!$user->hasVerfiedEmail()){
             return response()->json([
                 'status'=> "Error",
                 'message'=> "Please verify your email address to login"
@@ -74,7 +74,6 @@ class AuthController extends Controller
             'user'=> $user,
             'token'=> $token->plainTextToken,
         ]);
-
     }
 
     // Logout user
@@ -86,8 +85,6 @@ class AuthController extends Controller
             'message'=> 'Logged out successfully'
         ]);
     }
-
-
     public function sendResetLink(Request $request):JsonResponse
     {
         $request->validate(['email' => 'required|email']);
