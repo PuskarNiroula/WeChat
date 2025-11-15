@@ -4,10 +4,31 @@
 @section("styles")
     <link rel="stylesheet" href="{{asset('/css/custom.css')}}">
     <style>
-        #logo-image{
-            width: 135dvh  ! important;
-            height: 100dvh ! important;
+        /* Full viewport wrapper centered */
+        #logo-image-div {
+            position: relative;      /* centers relative to viewport */
+            top: 55%;
+            left: 40%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;        /* stays above other content */
+            text-align: center;
         }
+
+        /* Responsive logo image */
+        #logo-image {
+            width: 40vw;           /* 40% of viewport width */
+            min-width: 100px;      /* optional minimum size */
+            height: auto;          /* maintain aspect ratio */
+        }
+
+        /* Optional: for very small screens */
+        @media (max-width: 576px) {
+            #logo-image {
+                width: 60vw;       /* larger relative size on small screens */
+                max-width: 150px;
+            }
+        }
+
     </style>
 @endsection
 
