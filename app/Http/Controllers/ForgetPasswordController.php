@@ -21,13 +21,13 @@ if(!$user)
         try {
             $token = Str::random(64);
             DB::table('password_resets')->updateOrInsert([
-                'email' => $email,
+               [ 'email' => $email,],
                 [
                     'token' => $token,
                     "created_at" => now()
                 ]
             ]);
-            $url = url('/reset-password/{$token}?email={$user->email}');
+            $url = url("/reset-password/{$token}/{$user->email}");
             Mail::raw("Reset your Password Here:" . $url, function ($message) use ($user) {
                 $message->to($user->email)
                     ->subject('Reset Password');

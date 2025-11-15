@@ -89,6 +89,12 @@ class AuthController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
+        $user=User::where('email',$request->email)->first();
+        if(!$user){
+            //wrong message to make attacker fool
+            return response()->json(['message'=>'Email send Successfully'],404);
+        }
+
         $token = Str::random(64);
 
         // Save token
@@ -110,19 +116,31 @@ class AuthController extends Controller
     public function resetPassword(Request $request,$token,$email):JsonResponse
     {
         $valid=validator($request->all(),[
-            'password' => 'required|string|min:6|same:password_confirmation|confirmed',
+            'password' => 'required|string|min:6|same:password_confirmation',
         ]);
         if($valid->fails()){
             return response()->json($valid->errors(),400);
         }
+        $myResetToken=DB::table('password_reset_tokens')->where('email',$email)->where('token',$token)->first();
 
         if(
             DB::table('password_reset_tokens')->where('email',$email)
             ->where('token',$token)->exists()
         ){
+            $createdAt =$myResetToken->created_at;
+
+            if (!$createdAt) {
+                return response()->json(['message' => 'Invalid token'], 400);
+            }
+
+            //check if more than an hour has passed if so invalidate that token
+            if (Carbon::parse($createdAt)->addHour()->isPast()) {
+                return response()->json(['message' => 'Token expired'], 400);
+            }
             $user=User::where('email',$email)->first();
             $user->password=$request->password;
             $user->save();
+            $myResetToken->delete();
             return response()->json(['message'=>'Password reset successfully']);
         }
         return response()->json(['message'=>'Invalid token'],400);

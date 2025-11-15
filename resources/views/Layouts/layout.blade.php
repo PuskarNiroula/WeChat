@@ -76,7 +76,41 @@
                 <button type="submit"><i class="bi bi-box-arrow-right"></i> Logout</button>
             </form>
 
-            <a href="#"><i class="bi bi-person"></i></a>
+            <div style="position: relative; display: inline-block;">
+                <!-- Settings Icon -->
+                <a href="javascript:void(0);" id="settingsToggle">
+                    <i class="fa fa-cog" style="font-size:24px; color:#128c7e;"></i>
+                </a>
+
+                <!-- Dropdown Menu -->
+                <div id="settingsDropdown" style="
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: #fff;
+        min-width: 180px;
+        box-shadow: 0px 4px 20px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        z-index: 1000;
+    ">
+                    <a href="/change-password" style="
+            display: block;
+            padding: 12px 20px;
+            color: #128c7e;
+            text-decoration: none;
+            border-bottom: 1px solid #eee;
+        ">Change Password</a>
+                    <a href="/change-email" style="
+            display: block;
+            padding: 12px 20px;
+            color: #128c7e;
+            text-decoration: none;
+        ">Change Email</a>
+                </div>
+            </div>
+
+
+
         </div>
     </div>
 
@@ -89,6 +123,21 @@
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="{{asset('/js/script.js')}}"></script>
+<script>
+    const toggle = document.getElementById('settingsToggle');
+    const dropdown = document.getElementById('settingsDropdown');
+
+    toggle.addEventListener('click', () => {
+        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    });
+
+    // Close dropdown if clicked outside
+    window.addEventListener('click', (e) => {
+        if (!toggle.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+</script>
 
 @yield('scripts')
 </body>
