@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WeChat Login</title>
+    <title>WeChat - Reset Password</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         body {
@@ -15,7 +15,7 @@
             align-items: center;
             height: 100vh;
         }
-        .login-box {
+        .reset-box {
             background-color: #fff;
             padding: 40px 30px;
             border-radius: 10px;
@@ -23,12 +23,11 @@
             width: 350px;
             text-align: center;
         }
-        .login-box h1 {
+        .reset-box h1 {
             margin-bottom: 30px;
-            color: #128c7e; /* WhatsApp green */
+            color: #128c7e;
         }
-        .login-box input[type="email"],
-        .login-box input[type="password"] {
+        .reset-box input[type="password"] {
             width: 100%;
             padding: 12px 15px;
             margin: 10px 0;
@@ -36,7 +35,7 @@
             border-radius: 8px;
             outline: none;
         }
-        .login-box button {
+        .reset-box button {
             width: 100%;
             padding: 12px;
             margin-top: 20px;
@@ -48,77 +47,86 @@
             cursor: pointer;
             transition: background 0.3s ease;
         }
-        .login-box button:hover {
+        .reset-box button:hover {
             background-color: #128c7e;
         }
-        .login-box .error {
+        .reset-box .success {
+            color: green;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        .reset-box .error {
             color: red;
             font-size: 0.9rem;
             margin-top: 5px;
         }
-        .login-box .footer {
+        .reset-box .footer {
             margin-top: 15px;
             font-size: 0.85rem;
             color: #888;
         }
-        .login-box .footer a {
+        .reset-box .footer a {
             color: #128c7e;
             text-decoration: none;
         }
-        .login-box .footer a:hover {
+        .reset-box .footer a:hover {
             text-decoration: underline;
         }
     </style>
 </head>
 <body>
-<div class="login-box">
-    <h1>WeChat</h1>
+<div class="reset-box">
+    <h1>Reset Password</h1>
 
-    @if(session('error'))
-        <div class="error">{{ session('error') }}</div>
-    @endif
+    <div id="message"></div>
 
-    <form method="POST" id="login-form">
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Login</button>
+    <form id="reset-form">
+        <input type="password" name="password" placeholder="New Password" required>
+        <input type="password" name="password_confirmation" placeholder="Confirm Password" required>
+        <button type="submit">Reset Password</button>
     </form>
-    <div class="footer">
-        <div><a href="/forgetPassword">Forget Password?</a></div>
-       <div> Don't have an account? <a href="/register">Register</a></div>
-    </div>
 
+    <div class="footer">
+        <a href="{{ url('/login') }}">Back to Login</a>
+    </div>
 </div>
+
 <script>
-    let csrf=`{{csrf_token()}}`;
-    document.getElementById('login-form').addEventListener('submit', async function(e) {
+    let csrf = `{{ csrf_token() }}`;
+
+    // Extract token and email from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email');
+    const token = window.location.pathname.split('/').pop(); // last segment = token
+
+    document.getElementById('reset-form').addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        const email = this.email.value;
         const password = this.password.value;
+        const password_confirmation = this.password_confirmation.value;
 
+        const messageDiv = document.getElementById('message');
+        messageDiv.innerHTML = '';
         try {
-            const response = await fetch('/login', {
+            const response = await fetch(`/api/resetPassword/${token}/${email}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrf
                 },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ password, password_confirmation })
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                // Save bearer token in localStorage
-                localStorage.setItem('token', data.token);
-                window.location.href = '/dashboard';
+                messageDiv.innerHTML = `<div class="success">${data.message}</div>`;
+                setTimeout(() => window.location.href = '/login', 3000);
             } else {
-                alert(data.message || 'Login failed!');
+                messageDiv.innerHTML = `<div class="error">${data.message || 'Error resetting password'}</div>`;
             }
         } catch (err) {
             console.error(err);
-            alert('An error occurred. Check console for details.');
+            messageDiv.innerHTML = `<div class="error">Something went wrong. Check console.</div>`;
         }
     });
 </script>

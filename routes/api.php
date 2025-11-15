@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ExtraController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -11,8 +12,12 @@ Route::get('/test', function () {
     return response()->json(['message' => 'API works']);
 });
 Route::controller(AuthController::class)->group(function () {
-    Route::post('/api/login', 'login');
+    Route::post('/api/login', 'login')->name('api.login');
+    Route::post('/sendPasswordResetLinkEmail', 'sendResetLink')->name('password.email');
+    Route::post('/api/resetPassword/{token}/{email}', 'resetPassword')->name('password.update');
 });
+Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
+    ->name('verification.verify');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/api/logout', [AuthController::class, 'logout'])->name('api.logout');;

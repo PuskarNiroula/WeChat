@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WeChat Login</title>
+    <title>WeChat Register</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         body {
@@ -25,8 +25,9 @@
         }
         .login-box h1 {
             margin-bottom: 30px;
-            color: #128c7e; /* WhatsApp green */
+            color: #128c7e;
         }
+        .login-box input[type="text"],
         .login-box input[type="email"],
         .login-box input[type="password"] {
             width: 100%;
@@ -72,55 +73,68 @@
 </head>
 <body>
 <div class="login-box">
-    <h1>WeChat</h1>
+    <h1>Create Account</h1>
 
     @if(session('error'))
         <div class="error">{{ session('error') }}</div>
     @endif
 
-    <form method="POST" id="login-form">
-        <input type="email" name="email" placeholder="Email" required>
+    <form id="register-form">
+        <input type="text" name="name" placeholder="Full Name" required>
+        <input type="email" name="email" placeholder="Email Address" required>
         <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Login</button>
+        <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+        <span id="password-message" class="error"></span>
+        <button type="submit">Register</button>
     </form>
+
     <div class="footer">
-        <div><a href="/forgetPassword">Forget Password?</a></div>
-       <div> Don't have an account? <a href="/register">Register</a></div>
+        Already have an account? <a href="/login">Login</a>
     </div>
 
 </div>
+
 <script>
-    let csrf=`{{csrf_token()}}`;
-    document.getElementById('login-form').addEventListener('submit', async function(e) {
+    let csrf = `{{ csrf_token() }}`;
+    document.getElementById('register-form').addEventListener('submit', async function(e) {
         e.preventDefault();
 
+        const name = this.name.value;
         const email = this.email.value;
         const password = this.password.value;
+        const confirmation = this.password_confirmation.value;
+        const passError=this.querySelector('#password-message');
+
+        if(password !== confirmation){
+         passError.textContent="Passwords do not match";
+            return;
+        }
 
         try {
-            const response = await fetch('/login', {
+            const response = await fetch('/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrf
                 },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ name, email, password,confirmation })
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                // Save bearer token in localStorage
-                localStorage.setItem('token', data.token);
-                window.location.href = '/dashboard';
+                alert("Registration successful! Please verify your email before logging in.");
+                window.location.href = '/login';
             } else {
-                alert(data.message || 'Login failed!');
+                alert(data.message || 'Registration failed!');
             }
+
         } catch (err) {
             console.error(err);
             alert('An error occurred. Check console for details.');
         }
     });
 </script>
+
 </body>
 </html>

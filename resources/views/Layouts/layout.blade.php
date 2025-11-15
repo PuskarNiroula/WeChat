@@ -7,56 +7,8 @@
     <title>@yield('title', 'Chat App')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{asset('/css/custom.css')}}">
     @yield('styles')
-    <style>
-        body, html {
-            height: 100%;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-
-        .main-container {
-            display: flex;
-            height: 100vh;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 80px;
-            background-color: #0d6efd;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 0;
-        }
-
-        .sidebar .top-links, .sidebar .bottom-links {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-
-        .sidebar a {
-            color: white;
-            text-decoration: none;
-            font-size: 1.5rem;
-            display: flex;
-            justify-content: center;
-        }
-
-        .sidebar a:hover {
-            color: #cce5ff;
-        }
-
-        /* Main content */
-        .content {
-            flex-grow: 1;
-            background-color: #f0f2f5;
-            overflow-y: auto;
-        }
-
-    </style>
 </head>
 <body>
 
@@ -65,18 +17,34 @@
     {{-- Vertical Sidebar --}}
     <div class="sidebar">
         <div class="top-links">
-            <a href="/dashboard"><i class="bi bi-chat-dots"></i></a>
-            <a href="/profile"><i class="bi bi-person-circle"></i></a>
-            <a href="#"><i class="bi bi-bell"></i></a>
+            <a href="/dashboard" title="chats"><i class="bi bi-chat-dots"></i></a>
+            <a href="/profile" title="profile"><i class="bi bi-person-circle"></i></a>
+            <a href="#" title="notification"><i class="bi bi-bell"></i></a>
         </div>
 
         <div class="bottom-links">
-            <form method="POST" action="{{route('logout')}}">
+            <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
                 @csrf
-                <button type="submit"><i class="bi bi-box-arrow-right"></i> Logout</button>
+                <button id="logout_buton" type="submit" title="Logout">
+                    <i class="bi bi-power"></i>
+                </button>
             </form>
 
-            <a href="#"><i class="bi bi-person"></i></a>
+
+            <div class="settings">
+                <a href="javascript:void(0);" id="settingsToggle" title="settings">
+                    <i class="bi bi-gear-fill" style="font-size: 24px;"></i>
+                </a>
+
+                <div id="settingsDropdown">
+                    <a id="dropdownLinks" href="/change-password">Change Password</a>
+                    <a id="dropdownLinks" href="/change-email">Change Email</a>
+                </div>
+            </div>
+
+
+
+
         </div>
     </div>
 
@@ -89,6 +57,21 @@
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="{{asset('/js/script.js')}}"></script>
+<script>
+    const toggle = document.getElementById('settingsToggle');
+    const dropdown = document.getElementById('settingsDropdown');
+
+    toggle.addEventListener('click', () => {
+        console.log('clicked')
+        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    });
+
+    window.addEventListener('click', (e) => {
+        if (!toggle.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+</script>
 
 @yield('scripts')
 </body>
