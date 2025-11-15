@@ -7,7 +7,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -55,6 +59,12 @@ class AuthController extends Controller
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
+        if($user->email_verified_at==null){
+            return response()->json([
+                'status'=> "Error",
+                'message'=> "Please verify your email address to login"
+            ],403);
+        }
 
         $token = $user->createToken("Chat Api");
         $token->accessToken->expires_at = now()->addHours(2);
@@ -75,6 +85,50 @@ class AuthController extends Controller
         return response()->json([
             'message'=> 'Logged out successfully'
         ]);
+    }
+
+
+    public function sendResetLink(Request $request):JsonResponse
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $token = Str::random(64);
+
+        // Save token
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $request->email],
+            ['token' => $token, 'created_at' => Carbon::now()]
+        );
+
+        // Send reset email
+        $url = url("/resetPassword/{$token}?email={$request->email}");
+        Mail::raw("Click here to reset your password: {$url}", function($message) use ($request) {
+            $message->to($request->email)
+                ->subject('Password Reset Request');
+        });
+
+        return response()->json(['message' => 'Password reset email sent']);
+
+    }
+    public function resetPassword(Request $request,$token,$email):JsonResponse
+    {
+        $valid=validator($request->all(),[
+            'password' => 'required|string|min:6|same:password_confirmation|confirmed',
+        ]);
+        if($valid->fails()){
+            return response()->json($valid->errors(),400);
+        }
+
+        if(
+            DB::table('password_reset_tokens')->where('email',$email)
+            ->where('token',$token)->exists()
+        ){
+            $user=User::where('email',$email)->first();
+            $user->password=$request->password;
+            $user->save();
+            return response()->json(['message'=>'Password reset successfully']);
+        }
+        return response()->json(['message'=>'Invalid token'],400);
     }
 
     // Get current user
