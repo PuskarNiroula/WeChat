@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 
+use App\Service\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -16,28 +17,39 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    private UserService $userService;
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
     // Register user
     public function register(Request $request): JsonResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'email'=> 'required|email|unique:users,email',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:6|same:confirmation',
         ]);
 
-        $user = User::create([
-            'name'=> $request->name,
-            'email'=> $request->email,
-            'password'=> Hash::make($request->password),
-        ]);
+        try{
+            $user=$this->userService->createUser($request->all());
+            $token = $user->createToken('chatapp')->plainTextToken;
+
+            return response()->json([
+                'user'=> $user,
+                'token'=> $token,
+            ], 201);
+        }catch (\Exception $e){
+            return response()->json([
+                'status'=> "Failed to register",
+                'message'=> $e->getMessage()
+            ]);
+        }
+
+
 
         // Create token
-        $token = $user->createToken('chatapp')->plainTextToken;
 
-        return response()->json([
-            'user'=> $user,
-            'token'=> $token,
-        ], 201);
     }
 
     // Login user
