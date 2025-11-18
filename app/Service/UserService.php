@@ -22,6 +22,7 @@ class UserService{
      $user=$this->userRepo->createUsers($data);
    if($user==null)
        throw new \Exception('Error creating user');
+    $user->sendEmailVerificationNotification();
    return $user;
     }
 

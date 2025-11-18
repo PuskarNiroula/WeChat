@@ -33,4 +33,9 @@ class ConversationUserRepository implements ConversationUserRepositoryInterface
         DB::commit();
         return ConUser::where('conversation_id',$conversationId)->where('user_id',$userId)->with('user')->first();
     }
+
+    public function getReceiverId(int $conversationId): int
+    {
+        return ConUser::where('conversation_id',$conversationId)->where('user_id','!=',auth()->id())->pluck('user_id')->first();
+    }
 }

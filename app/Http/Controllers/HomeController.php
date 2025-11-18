@@ -82,7 +82,6 @@ class HomeController extends Controller{
         }
         try {
             $user = $this->userService->createUser($request->all());
-            $user->sendEmailVerificationNotification();
             return response()->json([
                 'status' => "User created successfully",
                 'user' => $user,

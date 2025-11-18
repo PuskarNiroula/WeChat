@@ -4,14 +4,16 @@ namespace App\Service;
 
 use App\Interface\ConversationRepositoryInterface;
 use App\Interface\ConversationUserRepositoryInterface;
+use App\Repository\ConversationRepository;
+use App\Repository\ConversationUserRepository;
 
 class ConversationUserService
 {
     protected ConversationUserRepositoryInterface $conversationUserRepository;
     protected ConversationRepositoryInterface $conversationRepository;
-    public function __construct(ConversationUserRepositoryInterface $conversationUserRepository,ConversationRepositoryInterface $conversationRepository){
-        $this->conversationUserRepository=$conversationUserRepository;
-        $this->conversationRepository=$conversationRepository;
+    public function __construct(){
+        $this->conversationUserRepository=new ConversationUserRepository();
+        $this->conversationRepository=new ConversationRepository();
     }
 
     /**

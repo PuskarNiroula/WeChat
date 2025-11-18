@@ -7,6 +7,7 @@ use App\Models\LastMessage;
 use App\Models\Message;
 use App\Models\User;
 use App\Service\ConversationUserService;
+use App\Service\MessageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,9 +16,11 @@ use App\Events\MessageSent;
 class MessageController extends Controller
 {
     protected ConversationUserService $conversationUserService;
-    public function __construct(ConversationUserService $conversationUserService)
+    protected MessageService $messageService;
+    public function __construct()
     {
-        $this->conversationUserService = $conversationUserService;
+        $this->conversationUserService = new ConversationUserService();
+        $this->messageService = new MessageService();
     }
 
     public function getChunkMessages(int $conversation_id):JsonResponse
@@ -57,11 +60,9 @@ class MessageController extends Controller
         return response()->json($messages);
     }
 public function sendMessage(Request $request){
-        $userId=Auth::id();
         $conversation_id=$request->conversation_id;
         $message=$request->message;
 
-        // Validate message content
         $maxLength = 1000;
         if (empty($message) || !is_string($message) || trim($message) === '') {
             return response()->json(['error' => 'Message cannot be empty.'], 422);
@@ -73,28 +74,22 @@ public function sendMessage(Request $request){
         if($conversation_id<1){
             return response()->json(['error' => 'Fuck you cheap hacker'], 403);
         }
-        $receiver_id=ConUser::where('conversation_id',$conversation_id)->where('user_id','!=',$userId)->pluck('user_id')->first();
-        if(ConUser::where('conversation_id',$conversation_id)->where('user_id',$userId)->exists()){
-           $message= Message::create([
-                'sender_id'=>$userId,
-                'message'=>$message,
-                'conversation_id'=>$conversation_id,
+        $messageDto=[
+            'conversation_id'=>$conversation_id,
+            'message'=>$message,
+            'sender_id'=>Auth::id(),
+        ];
+           try{
+            $this->messageService->createMessage($messageDto);
+            return response()->json(['message' => 'Message sent successfully.']);
+           }catch (\Exception $e){
+            return response()->json([
+                'status'=> "Failed to send message",
+                'message'=> $e->getMessage(),
             ]);
-           $latestMessage=LastMessage::where('conversation_id',$conversation_id)->first();
-           if(!$latestMessage){
-               LastMessage::create([
-                   'conversation_id'=>$conversation_id,
-                   'message_id'=>$message->id,
-               ]);
-           }else{
-               $latestMessage->message_id=$message->id;
-               $latestMessage->save();
            }
-           broadcast(new MessageSent($receiver_id,$conversation_id))->toOthers();
-            return response()->json(['message'=>'Message sent successfully'],200);
         }
-        return response()->json(['error' => 'Fuck you a bit educated hacker, try harder next time i have left 2 loop holes'], 403);
-}
+
 
     public function createOrFindConversation(int $user_id)
     {
@@ -104,9 +99,6 @@ public function sendMessage(Request $request){
                 'message' => 'Invalid user id'
             ], 401);
         }
-
-
-
        try{
            $conversation=$this->conversationUserService->FindOrCreateConversation($user_id);
            return response()->json([
