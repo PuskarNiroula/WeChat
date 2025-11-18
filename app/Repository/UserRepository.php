@@ -1,15 +1,16 @@
 <?php
 
 namespace App\Repository;
+use App\Exception\UserNotFoundException;
 use App\Interface\UserRepoInterface;
 use App\Models\User;
 
 
 class UserRepository implements UserRepoInterface{
 
-    public function createUsers(array $data)
+    public function createUsers(array $userDto)
     {
-        return User::create($data);
+        return User::create($userDto);
     }
 
     public function getUserById(int $id)
@@ -38,4 +39,23 @@ class UserRepository implements UserRepoInterface{
     {
         return User::where('email', $email)->exists();
     }
+
+    public function searchUser(string $name)
+    {
+        $users = User::where('name', 'like', '%' . $name . '%')
+            ->limit(10)
+            ->get(['id', 'name']);
+
+        $result = [];
+
+        foreach ($users as $user) {
+            $result[] = [
+                'id' => $user->id,
+                'name' => $user->name,
+            ];
+        }
+        return $result;
+    }
+
+
 }

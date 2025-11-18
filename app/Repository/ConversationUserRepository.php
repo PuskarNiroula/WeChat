@@ -9,11 +9,11 @@ class ConversationUserRepository implements ConversationUserRepositoryInterface
 {
     public function FindConversation(int $userId)
     {
-        return ConUser::where('user_id',auth()->id())
+        return ConUser::where('user_id',$userId)
              ->whereIn('conversation_id',function ($query) use ($userId) {
                  $query->select('conversation_id')
                      ->from('conversation_user')
-                     ->where('user_id', $userId);
+                     ->where('user_id', auth()->id());
                      })
                      ->with('user')
                      ->first();
@@ -37,5 +37,10 @@ class ConversationUserRepository implements ConversationUserRepositoryInterface
     public function getReceiverId(int $conversationId): int
     {
         return ConUser::where('conversation_id',$conversationId)->where('user_id','!=',auth()->id())->pluck('user_id')->first();
+    }
+
+    public function getConversationIdofUser(int $userId): array
+    {
+        return ConUser::where('user_id',$userId)->pluck('conversation_id')->toArray();
     }
 }

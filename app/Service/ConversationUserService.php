@@ -31,5 +31,9 @@ class ConversationUserService
         return $this->conversationUserRepository->CreateConversation($conversationId,$userId,auth()->id());
     }
 
+    public function getConversationIdofUser(int $userId):array{
+       return $this->conversationUserRepository->getConversationIdofUser($userId);
+    }
+
 
 }

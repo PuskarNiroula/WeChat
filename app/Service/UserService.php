@@ -10,8 +10,9 @@ use App\Models\User;
 class UserService{
 
     protected UserRepoInterface $userRepo;
-    public function __construct(UserRepoInterface $userRepo){
-     $this->userRepo=$userRepo;
+    public function __construct()
+    {
+        $this->userRepo=app(UserRepoInterface::class);
     }
 
     public function createUser(array $data){
@@ -52,9 +53,20 @@ class UserService{
             $data['avatar'] = $filename;
         }
 
-        // Call repository to update DB
-        /** @var TYPE_NAME $user */
         return $this->userRepo->updateUser($user, $data);
+    }
+
+    /**
+     * @throws UserNotFoundException
+     */
+    public function searchUser(string $name):array{
+        $result = $this->userRepo->searchUser($name);
+
+        if (!$result) {
+            throw new UserNotFoundException('User not found');
+        }
+
+        return $result;
     }
 
 

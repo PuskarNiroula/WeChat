@@ -8,4 +8,6 @@ interface ConversationUserRepositoryInterface
     public function CreateConversation( int $conversationId,int $userId,int $myId);
     public function getReceiverId(int $conversationId):int;
 
+    public function getConversationIdofUser(int $userId):array;
+
 }

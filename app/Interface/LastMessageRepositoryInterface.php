@@ -7,4 +7,8 @@ interface LastMessageRepositoryInterface
     public function getLastMessage(int $conversationId);
     public function updateLastMessage(int $conversationId,int $lastMessageId);
 
+    public function checkIfLastMessageExist(int $conversationId):bool;
+
+    public function getSidebar(array $conversationIds);
+
 }
