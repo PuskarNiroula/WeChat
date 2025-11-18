@@ -1,0 +1,10 @@
+<?php
+
+namespace App\Interface;
+
+interface ConversationUserRepositoryInterface
+{
+    public function FindConversation(int $userId);
+    public function CreateConversation( int $conversationId,int $userId,int $myId);
+
+}

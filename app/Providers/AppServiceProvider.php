@@ -2,9 +2,12 @@
 
 namespace App\Providers;
 
+use App\Interface\ConversationRepositoryInterface;
+use App\Interface\ConversationUserRepositoryInterface;
 use App\Interface\UserRepoInterface;
+use App\Repository\ConversationRepository;
+use App\Repository\ConversationUserRepository;
 use App\Repository\UserRepository;
-use App\Service\UserService;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,7 +18,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(UserRepoInterface::class,UserRepository::class);
+        $this->app->bind(UserRepoInterface::class, UserRepository::class);
+        $this->app->bind(ConversationRepositoryInterface::class, ConversationRepository::class);
+        $this->app->bind(ConversationUserRepositoryInterface::class, ConversationUserRepository::class);
+
+
     }
 
     /**

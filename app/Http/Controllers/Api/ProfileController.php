@@ -20,7 +20,7 @@ class ProfileController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function updateProfile(Request $request)
+    public function updateProfile(Request $request): JsonResponse
     {
         $valid = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:120', 'regex:/^[\p{L}\p{N}\p{Zs}\p{P}\p{S}]+$/u'],

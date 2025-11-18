@@ -71,7 +71,7 @@ class AuthController extends Controller
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
-        if(!$user->hasVerfiedEmail()){
+        if(!$user->hasVerifiedEmail()){
             return response()->json([
                 'status'=> "Error",
                 'message'=> "Please verify your email address to login"

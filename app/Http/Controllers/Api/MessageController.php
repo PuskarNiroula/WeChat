@@ -6,6 +6,7 @@ use App\Models\Conversation;
 use App\Models\LastMessage;
 use App\Models\Message;
 use App\Models\User;
+use App\Service\ConversationUserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,12 @@ use App\Events\MessageSent;
 
 class MessageController extends Controller
 {
+    protected ConversationUserService $conversationUserService;
+    public function __construct(ConversationUserService $conversationUserService)
+    {
+        $this->conversationUserService = $conversationUserService;
+    }
+
     public function getChunkMessages(int $conversation_id):JsonResponse
     {
         if ($conversation_id == 0 || $conversation_id == null) {
@@ -98,53 +105,22 @@ public function sendMessage(Request $request){
             ], 401);
         }
 
-        $myId = Auth::id();
 
-        if ($myId == $user_id) {
+
+       try{
+           $conversation=$this->conversationUserService->FindOrCreateConversation($user_id);
+           return response()->json([
+               'conversation_id' => $conversation->conversation_id,
+               'name'=>$conversation->user->name,
+               'id'=>$conversation->user->id,
+               'avatar'=>$conversation->user->avatar??"avatar.jpg",
+           ]);
+       }catch (\Exception $e){
             return response()->json([
-                'status' => 'error',
-                'message' => 'You cannot create a conversation with yourself'
+                'status'=> "Failed to create conversation",
+                'message'=> $e->getMessage(),
             ]);
-        }
-
-        $commonConversation =ConUser::
-            where('user_id', $myId)
-            ->whereIn('conversation_id', function ($query) use ($user_id) {
-                $query->select('conversation_id')
-                    ->from('conversation_user')
-                    ->where('user_id', $user_id);
-            })->with('user')
-            ->first();
-        $conversationId = $commonConversation->conversation_id??null;
-        $name="Unknown";
-        if(User::where('id',$user_id)->exists()){
-            $user=User::find($user_id);
-            $name=$user->name;
-            $avatar=$user->avatar;
-        }
-        $id=$user_id;
-        if(!$commonConversation) {
-            $conv = Conversation::create([
-                'type' => "private"
-            ]);
-
-            ConUser::create([
-                'conversation_id' => $conv->id,
-                "user_id" =>Auth::id()
-            ]);
-          ConUser::create([
-                'conversation_id' => $conv->id,
-                "user_id" =>$user_id
-            ]);
-
-            $conversationId=$conv->id;
-        }
-            return response()->json([
-                'conversation_id' => $conversationId,
-                'name'=>$name,
-                'id'=>$id,
-                'avatar'=>$avatar??"avatar.jpg",
-            ]);
+       }
     }
 
 }
