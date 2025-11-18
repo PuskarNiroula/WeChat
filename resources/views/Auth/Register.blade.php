@@ -80,6 +80,7 @@
     @endif
 
     <form id="register-form">
+        @csrf
         <input type="text" name="name" placeholder="Full Name" required>
         <input type="email" name="email" placeholder="Email Address" required>
         <input type="password" name="password" placeholder="Password" required>
@@ -102,7 +103,7 @@
         const name = this.name.value;
         const email = this.email.value;
         const password = this.password.value;
-        const confirmation = this.password_confirmation.value;
+        const confirmation = this.confirm_password.value;
         const passError=this.querySelector('#password-message');
 
         if(password !== confirmation){
@@ -122,7 +123,7 @@
 
             const data = await response.json();
 
-            if (response.ok) {
+            if (data.status === 'success') {
                 alert("Registration successful! Please verify your email before logging in.");
                 window.location.href = '/login';
             } else {

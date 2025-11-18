@@ -285,15 +285,13 @@
                 }
 
                 // Populate results
-                Object.entries(results).forEach(([user_id, name]) => {
+                results.forEach(({ id, name }) => {
                     const div = document.createElement('div');
-                    div.textContent = name; // show the user's name
+                    div.textContent = name;
                     div.className = 'px-3 py-2 search-item';
                     div.style.cursor = 'pointer';
 
-                    div.addEventListener('click', () => {
-                        createOrOpenChat(user_id);
-                    });
+                    div.addEventListener('click', () => createOrOpenChat(id));
 
                     resultsContainer.appendChild(div);
                 });

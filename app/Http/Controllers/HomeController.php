@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 
-use App\Models\User;
+use App\Service\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,7 +11,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Laravel\Sanctum\PersonalAccessToken;
 
+
 class HomeController extends Controller{
+    protected UserService $userService;
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
 
     public function gotoLoginPage():view{
         return view('Auth.login');
@@ -25,7 +31,7 @@ class HomeController extends Controller{
                 'message' => 'Invalid credentials'
             ], 401);
         }
-        if(!$request->user()->hasVerfiedEmail()){
+        if(!$request->user()->hasVerifiedEmail()){
             return response()->json([
                 'status'=> "Error",
                 'message'=> "Please verify your email address to login"
@@ -69,24 +75,24 @@ class HomeController extends Controller{
         $valid=validator($request->all(),[
             'name'=>['required','string','max:255'],
             'email'=>['required','string','email','max:255','unique:users'],
-            'password'=>['required','string','min:4','same:confirm_password']
+            'password'=>['required','string','min:4','same:confirmation']
         ]);
         if($valid->fails()){
             return response()->json($valid->errors(),400);
         }
-
-      $user=User::create([
-            'name'=>$request->name,
-            'email'=>$request->email,
-            'password'=>$request->password,
-        ]);
-
-        $user->sendEmailVerificationNotification();
-        return response()->json([
-            'status'=>"User created successfully",
-            'user'=>$user,
-            'message'=> 'Please verify your email address to login'
-        ],201);
+        try {
+            $user = $this->userService->createUser($request->all());
+            return response()->json([
+                'status' => "User created successfully",
+                'user' => $user,
+                'message' => 'Please verify your email address to login'
+            ], 201);
+        }catch (\Exception $e){
+            return response()->json([
+                'status'=> "Failed to register",
+                'message'=> $e->getMessage()
+            ]);
+        }
     }
     public function dashboard():view{
         return view('Main.dashboard');

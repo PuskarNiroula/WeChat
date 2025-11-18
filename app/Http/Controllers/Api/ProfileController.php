@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-
-use Exception;
+use App\Service\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends Controller
 {
+    private UserService $userService;
+
+    public function __construct(UserService $userService){
+        $this->userService=$userService;
+    }
 
     /**
      * @param Request $request
@@ -28,40 +31,18 @@ class ProfileController extends Controller
             return response()->json($valid->errors(), 400);
         }
 
-        $user = Auth::user();
+        try {
+            $data = [
+                'name' => $request->name,
+                'avatar' => $request->file('avatar') ?? null
+            ];
 
-        if ($request->hasFile('avatar')) {
-            $file = $request->file('avatar');
-            // Generate a unique filename with extension
-            $extension = $file->getClientOriginalExtension();
-            // Validate extension is in allowed list
-            if (!in_array(strtolower($extension), ['jpeg', 'jpg', 'png', 'gif', 'svg', 'webp'])) {
-                return response()->json(['message' => 'Invalid file type'], 400);
-            }
-            $filename = uniqid() . '_' . time() . '.' . $extension;
+            $this->userService->updateProfile($data);
 
-
-                // Save the file to public/images/avatars
-                try{
-                    $file->move(public_path('images/avatars'), $filename);
-                }catch (\Exception){
-                    return response()->json(['message' => 'Failed to upload avatar'], 500);
-                }
-
-                // Delete old avatar if exists
-                if ($user->avatar && file_exists(public_path('images/avatars/' . $user->avatar))) {
-                   try{
-                       unlink(public_path('images/avatars/' . $user->avatar));
-                   }catch (\Exception){
-                       return response()->json(['message' => 'Failed to delete old avatar'], 500);
-                   }
-                }
-                $user->avatar = $filename;
-
+            return response()->json(['message' => 'Profile updated successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
         }
-        $user->name = $request->name;
-        $user->save();
-        return response()->json(['message' => 'Profile updated successfully']);
     }
 
 
