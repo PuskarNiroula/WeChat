@@ -2,16 +2,13 @@
 namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ConUser;
-use App\Models\Conversation;
-use App\Models\LastMessage;
 use App\Models\Message;
-use App\Models\User;
 use App\Service\ConversationUserService;
 use App\Service\MessageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Events\MessageSent;
+
 
 class MessageController extends Controller
 {
@@ -28,38 +25,11 @@ class MessageController extends Controller
         if ($conversation_id == 0 || $conversation_id == null) {
             return response()->json(['error' => 'hello world'], 403);
         }
-        $userId = Auth::id();
-        $conversationId = $conversation_id;
-
-
-        $exists = ConUser::where('conversation_id', $conversationId)
-            ->where('user_id', $userId)
-            ->exists();
-
-        if (!$exists) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
-        $messages = Message::where('conversation_id', $conversationId)
-            ->orderBy('created_at', 'desc')
-            ->paginate(50);
-        Message::where('conversation_id', $conversationId)
-            ->where('sender_id', '!=', Auth::id())
-            ->where('is_read', 0)
-            ->update(['is_read' => 1]);
-        $transformed = $messages->getCollection()->map(function ($item) {
-
-            return [
-                'sender_id' => $item->sender_id,
-                'message' => $item->message,
-                'time'=>$item->created_at,
-            ];
-        });
-
-        $messages->setCollection($transformed);
+        $messages=$this->messageService->getPaginatedMessages($conversation_id);
         return response()->json($messages);
     }
-public function sendMessage(Request $request){
+public function sendMessage(Request $request): JsonResponse
+{
         $conversation_id=$request->conversation_id;
         $message=$request->message;
 
@@ -91,7 +61,7 @@ public function sendMessage(Request $request){
         }
 
 
-    public function createOrFindConversation(int $user_id)
+    public function createOrFindConversation(int $user_id): JsonResponse
     {
         if ($user_id < 1) {
             return response()->json([

@@ -60,4 +60,19 @@ class MessageService {
         });
         return $transformed->values();
     }
+
+    public function getPaginatedMessages(int $conversation_id):array{
+        $messages= $this->messageRepository->getMessagesByConversation($conversation_id);
+        $this->messageRepository->markAsRead($conversation_id);
+        $transformed = $messages->getCollection()->map(function ($item) {
+
+            return [
+                'sender_id' => $item->sender_id,
+                'message' => $item->message,
+                'time'=>$item->created_at,
+            ];
+        });
+        return $transformed->values()->toArray();
+    }
+
 }
