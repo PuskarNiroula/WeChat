@@ -31,8 +31,13 @@ class ConversationUserService
         return $this->conversationUserRepository->CreateConversation($conversationId,$userId,auth()->id());
     }
 
-    public function getConversationIdofUser(int $userId):array{
+    public function getConversationIdOfUser(int $userId):array{
        return $this->conversationUserRepository->getConversationIdofUser($userId);
+    }
+    public function checkValidConversation(int $userId, int $conversationId): bool
+    {
+        return $this->conversationUserRepository->checkValidUser($userId,$conversationId);
+
     }
 
 

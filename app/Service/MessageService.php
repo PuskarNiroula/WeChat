@@ -11,15 +11,22 @@ class MessageService {
     protected MessageRepositoryInterface $messageRepository;
     protected LastMessageRepositoryInterface $lastMessageRepository;
     protected ConversationUserRepositoryInterface $conversationUserRepository;
+    protected ConversationUserService $conversationUserService;
     public function __construct()
     {
         $this->messageRepository=app(MessageRepositoryInterface::class);
         $this->lastMessageRepository=app(LastMessageRepositoryInterface::class);
         $this->conversationUserRepository=app(ConversationUserRepositoryInterface::class);
+        $this->conversationUserService=app(ConversationUserService::class);
     }
 
 
+    /**
+     * @throws \Exception
+     */
     public function createMessage(array $messageDto){
+        if(!$this->conversationUserService->checkValidConversation($messageDto['conversation_id'],auth()->id()))
+            throw new \Exception("Not your conversation");
         DB::beginTransaction();
        $message= $this->messageRepository->createMessage($messageDto);
         if($this->lastMessageRepository->checkIfLastMessageExist($messageDto['conversation_id'])){
@@ -64,6 +71,10 @@ class MessageService {
     }
 
     public function getPaginatedMessages(int $conversation_id):array{
+        if(!$this->conversationUserService->checkValidConversation($conversation_id,auth()->id())){
+            throw new \Exception("Conversation doesn't belong to you");
+        }
+
         $cache=app(ChatCacheService::class)->getMessage($conversation_id);
         if(!empty($cache)){
             return [
