@@ -6,6 +6,7 @@ use App\Interface\ConversationRepositoryInterface;
 use App\Interface\ConversationUserRepositoryInterface;
 use App\Repository\ConversationRepository;
 use App\Repository\ConversationUserRepository;
+use Exception;
 
 class ConversationUserService
 {
@@ -17,11 +18,11 @@ class ConversationUserService
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function FindOrCreateConversation(int $userId){
         if (auth()->id() == $userId) {
-            throw new \Exception("You can't send message to yourself");
+            throw new Exception("You can't send message to yourself");
         }
         $conversationWithUser= $this->conversationUserRepository->FindConversation($userId);
         if($conversationWithUser!=null){
@@ -38,6 +39,9 @@ class ConversationUserService
     {
         return $this->conversationUserRepository->checkValidUser($userId,$conversationId);
 
+    }
+    public function getReceiverId(int $conversationId): int{
+        return $this->conversationUserRepository->getReceiverId($conversationId );
     }
 
 
