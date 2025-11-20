@@ -3,10 +3,8 @@
 namespace App\Events;
 
 
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -18,21 +16,30 @@ class MessageSent implements ShouldBroadcastNow
 
     public int $conversation_id;
     public int $receiver_id;
+    public string $message;
+    public string $time;
 
-    public function __construct($receiver_id,$conversation_id)
+    public function __construct($receiver_id,$conversation_id,$message,$time)
     {
       $this->receiver_id=$receiver_id;
       $this->conversation_id=$conversation_id;
+      $this->message=$message;
+      $this->time=$time;
 
         if (config('app.debug')) {
-            Log::info('📡 MessageSent event triggered!', ['id' => $receiver_id, 'conversation_id' => $conversation_id]);
+            Log::info('📡 MessageSent event triggered!',
+                [   'id' => $receiver_id,
+                    'conversation_id' => $conversation_id,
+                    'message' => $message,
+                    'time' => $time,
+                ]);
         }
     }
 
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * @return PrivateChannel
      */
     public function broadcastOn(): PrivateChannel
     {

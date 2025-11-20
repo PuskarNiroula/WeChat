@@ -64,6 +64,31 @@
         let conId=null;
         const myId=`{{Auth::id()}}`;
         let ChatUser=document.getElementById('chat_user');
+        const chatMessages = document.querySelector('.chat-messages');
+
+        function addMessageToChatList(message,time){
+            console.log(message +":"+ time)
+            // Create main message container
+            let messageDiv = document.createElement('div');
+            messageDiv.classList.add('message-bubble', 'received');
+
+            let messageText = document.createElement('p');
+            messageText.classList.add('mb-0');
+            messageText.textContent = message;
+
+            let timeEl = document.createElement('small');
+            timeEl.classList.add('text-muted');
+            timeEl.textContent = new Date(time).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            // Append safely
+            messageDiv.appendChild(messageText);
+            messageDiv.appendChild(timeEl);
+            chatMessages.appendChild(messageDiv);
+
+            chatMessages.scrollTop=chatMessages.scrollHeight;
+        }
 
         function loadDashboard(){
             if(conId!=null){
@@ -82,7 +107,7 @@
                 // Handle both array and object responses
                 const messages = res.data || res.messages || res;
 
-                const chatMessages = document.querySelector('.chat-messages');
+
                 chatMessages.innerHTML = ''; // Clear previous messages
 
                 if (!messages || messages.length === 0) {
@@ -219,7 +244,6 @@
                     $('#avatar-pic').attr('src', '/images/avatars/' + res.avatar);
                 }
                 loadMessages(res.conversation_id);
-                loadSidebar();
             } catch (err) {
                 console.error("Error fetching messages:", err.message);
             }

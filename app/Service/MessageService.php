@@ -33,7 +33,11 @@ class MessageService {
             $this->lastMessageRepository->createLastMessage($messageDto['conversation_id'],$message->id);
         }
         DB::commit();
-        broadcast(new MessageSent( $this->conversationUserService->getReceiverId($messageDto['conversation_id']),$messageDto['conversation_id']))->toOthers();
+        broadcast(new MessageSent( $this->conversationUserService->getReceiverId($messageDto['conversation_id']),
+            $messageDto['conversation_id'],
+            $messageDto['message'],
+            now())
+        )->toOthers();
         //caching the data to redis
         app(ChatCacheService::class)->pushMessage($messageDto['conversation_id'],$message['message'],$messageDto['sender_id'],now());
     }
@@ -74,7 +78,7 @@ class MessageService {
      * @throws Exception
      */
     public function getPaginatedMessages(int $conversation_id):array{
-        if(!$this->conversationUserService->checkValidConversation($conversation_id,auth()->id())){
+        if(!$this->conversationUserService->checkValidConversation(auth()->id(),$conversation_id)){
             throw new Exception("Conversation doesn't belong to you");
         }
 
