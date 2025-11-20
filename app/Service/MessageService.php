@@ -29,6 +29,8 @@ class MessageService {
         }
         DB::commit();
         broadcast(new MessageSent( $this->conversationUserRepository->getReceiverId($messageDto['conversation_id']),$messageDto['conversation_id']))->toOthers();
+        //caching the data to redis
+        app(ChatCacheService::class)->pushMessage($messageDto['conversation_id'],$message['message'],$messageDto['sender_id'],now());
     }
     public function getSidebar(){
         $userId=auth()->id();
@@ -62,16 +64,33 @@ class MessageService {
     }
 
     public function getPaginatedMessages(int $conversation_id):array{
+        $cache=app(ChatCacheService::class)->getMessage($conversation_id);
+        if(!empty($cache)){
+            return [
+                'source'=>'redis',
+                'messages'=>$cache
+            ];
+        }
         $messages= $this->messageRepository->getMessagesByConversation($conversation_id);
         $this->messageRepository->markAsRead($conversation_id);
         $transformed = $messages->getCollection()->map(function ($item) {
 
             return [
+                'source'=>"database",
                 'sender_id' => $item->sender_id,
                 'message' => $item->message,
                 'time'=>$item->created_at,
             ];
         });
+        //pulling data to redis
+        foreach($transformed->values()->toArray() as $message){
+            app(ChatCacheService::class)->pushMessage(
+                $conversation_id,
+                $message['message'],
+                $message['sender_id'],
+                $message['time']
+            );
+        }
         return $transformed->values()->toArray();
     }
 

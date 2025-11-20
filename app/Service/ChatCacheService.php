@@ -8,9 +8,14 @@ class ChatCacheService
 {
     protected int $limit=50;
 
-    public function pushMessage(int $conversationId,string $message){
+    public function pushMessage(int $conversationId,string $message,int $sender_id, string $createdAt){
         $key="chat:message:{$conversationId}";
-        Redis::lpush($key,json_encode($message));
+        $data=[
+            'message'=>$message,
+            'sender_id'=>$sender_id,
+            'time'=>$createdAt==null?now():$createdAt
+        ];
+        Redis::lpush($key,json_encode($data));
         Redis::ltrim($key,0,$this->limit-1);
     }
 
