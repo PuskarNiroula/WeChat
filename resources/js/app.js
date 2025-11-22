@@ -28,8 +28,9 @@ window.Echo.private(`Message-Channel.${myId}`)
 
         if (String(e.receiver_id)===String(myId)){
             loadSidebar();
+            if(e.conversation_id===conId){
+                loadMessages(conId);
+            }
         }
-        if(e.conversation_id===conId){
-            loadMessages(conId);
-        }
+
     });

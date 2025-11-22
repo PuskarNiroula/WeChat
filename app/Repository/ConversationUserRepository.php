@@ -43,4 +43,9 @@ class ConversationUserRepository implements ConversationUserRepositoryInterface
     {
         return ConUser::where('user_id',$userId)->pluck('conversation_id')->toArray();
     }
+
+    public function checkValidUser(int $userId, int $conversationId): bool
+    {
+      return ConUser::where('user_id',$userId)->where('conversation_id',$conversationId)->exists();
+    }
 }

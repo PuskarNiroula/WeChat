@@ -25,8 +25,12 @@ class MessageController extends Controller
         if ($conversation_id == 0 || $conversation_id == null) {
             return response()->json(['error' => 'hello world'], 403);
         }
-        $messages=$this->messageService->getPaginatedMessages($conversation_id);
-        return response()->json($messages);
+            try{
+                $messages=$this->messageService->getPaginatedMessages($conversation_id);
+                return response()->json($messages);
+            }catch (\Exception $exception){
+            return response()->json(['error' => $exception->getMessage()], 403);
+            }
     }
 public function sendMessage(Request $request): JsonResponse
 {

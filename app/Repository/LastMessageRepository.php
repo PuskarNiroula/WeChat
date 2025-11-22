@@ -44,6 +44,7 @@ class LastMessageRepository implements LastMessageRepositoryInterface
     {
         return LastMessage::whereIn('conversation_id', $conversationIds)
             ->with(['message.user', 'message.conversation.conUsers'])
-            ->get();
+            ->orderByDesc('updated_at')->get();
+
     }
 }

@@ -29,7 +29,7 @@ class MessageRepository implements MessageRepositoryInterface
     public function markAsRead(int $conversationId): void
     {
         Message::where('conversation_id', $conversationId)
-            ->whereNot('sender_id',auth()->id())
+            ->whereNot('sender_id','!=',auth()->id())
             ->where('is_read', 0)
             ->update(['is_read' => 1]);
     }
