@@ -23,7 +23,7 @@ class MessageService {
      * @throws Exception
      */
     public function createMessage(array $messageDto):void{
-        if(!$this->conversationUserService->checkValidConversation($messageDto['conversation_id'],auth()->id()))
+        if(!$this->conversationUserService->checkValidConversation(auth()->id(),$messageDto['conversation_id']))
             throw new Exception("Not your conversation");
         DB::beginTransaction();
        $message= $this->messageRepository->createMessage($messageDto);
@@ -62,7 +62,7 @@ class MessageService {
                     'conversation_id' => $item->conversation_id,
                     'last_message' => $item->message->message ?? null,
                     'is_read' => $item->message->is_read,
-                    'last_message_time' => $item->message->created_at ?? null,
+                    'last_message_time' => $item->message->updated_at ?? null,
                     'last_message_sender' => $item->message->user->id == $userId ? 'Myself' : $item->message->user->name,
                     'chat_member' => $memberName,
                     'chat_member_id' => $memberId,
@@ -81,6 +81,7 @@ class MessageService {
         if(!$this->conversationUserService->checkValidConversation(auth()->id(),$conversation_id)){
             throw new Exception("Conversation doesn't belong to you");
         }
+        $this->messageRepository->markAsRead($conversation_id);
 
         $cache=app(ChatCacheService::class)->getMessage($conversation_id);
         if(!empty($cache)){
@@ -90,7 +91,7 @@ class MessageService {
             ];
         }
         $messages= $this->messageRepository->getMessagesByConversation($conversation_id);
-        $this->messageRepository->markAsRead($conversation_id);
+
         $transformed = $messages->getCollection()->map(function ($item) {
 
             return [

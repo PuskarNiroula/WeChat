@@ -29,7 +29,7 @@ window.Echo.private(`Message-Channel.${myId}`)
         if (String(e.receiver_id)===String(myId)){
             loadSidebar();
             if(e.conversation_id===conId){
-                addMessageToChatList(e.message,e.time);
+                loadMessages(conId);
             }
         }
 
