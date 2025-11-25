@@ -52,6 +52,33 @@ class AuthController extends Controller
 
     }
 
+    public function storePublicKey(Request $request):JsonResponse
+    {
+        $user = auth()->user();
+
+        $user->update([
+            'public_key' => $request->public_identity_key
+        ]);
+        DB::table('user_pre_keys')->insert([
+            'user_id' => $user->id,
+            'public_key' => $request->signed_pre_key,
+            'signature' => $request->signed_pre_key_signature,
+            'key_type' => 'signed'
+        ]);
+
+        // Save one-time pre-keys
+        foreach ($request->one_time_pre_keys as $key) {
+            DB::table('user_pre_keys')->insert([
+                'user_id' => $user->id,
+                'public_key' => $key,
+                'key_type' => 'one-time'
+            ]);
+        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Public key saved successfully']);
+    }
+
     // Login user
 
     /**

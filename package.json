@@ -1,7 +1,9 @@
 {
     "dependencies": {
+        "@signalapp/libsignal-client": "^0.86.4",
         "ably": "^2.14.0",
         "laravel-echo": "^2.2.6",
+        "libsodium-wrappers": "^0.7.15",
         "pusher-js": "^8.4.0"
     },
     "devDependencies": {

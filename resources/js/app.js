@@ -1,6 +1,54 @@
 import Echo from 'laravel-echo';
+import {generateIdentityKey, generateOneTimePreKeys, generateSignedPreKey, initCrypto} from './crypto.js';
 
 import Pusher from 'pusher-js';
+
+async function sFetch(url, options = {}) {
+    options = options || {}
+    options.headers = { ...(options.headers || {}) }
+
+    const token = localStorage.getItem('token');
+    if (token) options.headers.Authorization = `Bearer ${token}`
+
+    // Only stringify if it's a plain object, leave FormData as-is
+    if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
+        options.body = JSON.stringify(options.body)
+        options.headers['Content-Type'] = 'application/json'
+    }
+
+    const response = await fetch(url, options)
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || 'Request failed')
+    }
+    return response.json();
+}
+
+window.setupUserKeys = async function() {
+    await initCrypto();
+
+    const identity = generateIdentityKey();
+    localStorage.setItem('privateIdentityKey', identity.privateKey);
+
+    const signedKey = generateSignedPreKey(identity.privateKey);
+    localStorage.setItem('signedPreKeyPrivate', signedKey.privateKey);
+
+    const oneTimeKeys = generateOneTimePreKeys();
+    localStorage.setItem('oneTimePreKeys', JSON.stringify(oneTimeKeys));
+
+   return await sFetch('/api/save-public-keys', {
+       method: 'POST',
+       headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+       body: JSON.stringify({
+           public_identity_key: identity.publicKey,
+           signed_pre_key: signedKey.publicKey,
+           signed_pre_key_signature: signedKey.signature,
+           one_time_pre_keys: oneTimeKeys.map(k => k.publicKey)
+       })
+   });
+};
+
+
 window.Pusher = Pusher;
 
 let token =localStorage.getItem('token');
