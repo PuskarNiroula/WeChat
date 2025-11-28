@@ -82,3 +82,25 @@ window.Echo.private(`Message-Channel.${myId}`)
         }
 
     });
+
+function encryptMessage(signedPreKey,message){
+    const sharedSecret = sodium.crypto_scalarmult(
+        sodium.from_base64(localStorage.getItem("privateIdentityKey")),
+        sodium.from_base64(signedPreKey)
+    );
+
+    // 2. Encrypt message
+    const nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
+
+    const cipherText = sodium.crypto_secretbox_easy(
+        message,
+        nonce,
+        sharedSecret
+    );
+
+    const encrypted = {
+        nonce: sodium.to_base64(nonce),
+        ciphertext: sodium.to_base64(cipherText),
+    };
+
+}

@@ -72,6 +72,8 @@
             sendMessage();
         });
 
+
+
         function addMessageToChatList(message,time,className='received'){
             console.log(message +":"+ time)
             // Create main message container
@@ -222,28 +224,33 @@
             document.addEventListener('DOMContentLoaded', loadSidebar);
 
 
-            async function sendMessage() {
-                const message = document.getElementById("message_to_be_sent").value.trim();
-                if (!message) {
-                    return;
-                }
-                try {
-                    addMessageToChatList(message, `{{now()}}`, "sent");
-                    await secureFetch(`/sendMessage`, {
-                        method: 'POST',
-                        body: {
-                            message: message,
-                            conversation_id: conId,
-                        }
-                    });
-                    loadSidebar();
-                    document.getElementById("message_to_be_sent").value = "";
-                } catch (err) {
-                    console.log(err);
-                }
-            }
+        async function sendMessage() {
+            const message = document.getElementById("message_to_be_sent").value.trim();
+            if (!message) return;
 
-            async function createOrOpenChat(user_id) {
+            const receiverBundle = await secureFetch(`/api/user_key_bundle/${conId}`);
+            // 1. Derive shared secret
+
+            // 2. Encrypt message
+
+
+            // 3. Send encrypted message to backend
+            await secureFetch(`/sendMessage`, {
+                method: 'POST',
+                body: {
+                    encrypted_message: encrypted,
+                    conversation_id: conId,
+                }
+            });
+
+            // 4. Update UI
+            addMessageToChatList(message, `{{now()}}`, "sent");
+            loadSidebar();
+            document.getElementById("message_to_be_sent").value = "";
+        }
+
+
+        async function createOrOpenChat(user_id) {
                 try {
                     const res = await secureFetch(`/openChat/${user_id}`, {method: "GET"});
                     ChatUser.innerHTML = res.name;

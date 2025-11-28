@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 
+use App\Models\ConUser;
 use App\Service\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -189,5 +191,27 @@ class AuthController extends Controller
     public function me(Request $request):JsonResponse
     {
         return response()->json($request->user());
+    }
+
+    public function getKeys(int $id):JsonResponse{
+        $receiverId=ConUser::where('conversation_id',$id)->where('user_id',"!=",Auth::id())->first()->user_id;
+        $identityKey=User::where('id',$receiverId)->first()->public_key;
+        $signature=DB::table('user_pre_keys')->where('user_id',$receiverId)->where('key_type',"signed")->get(['signature','public_key'])->first();
+        $oneTimeKeys=DB::table('user_pre_keys')->where('user_id',$receiverId)->where('key_type',"one-time")->get(['public_key'])->first();
+
+        if(!empty($signature) || !empty($oneTimeKeys)){
+            return response()->json([
+                'identityKey'=>$identityKey,
+                "signedPreKey"=>$signature->public_key,
+                'signature'=>$signature->signature,
+                'oneTimeKeys'=>$oneTimeKeys->public_key,
+            ]);
+        }
+
+        return response()->json([
+            'status'=>'success',
+            'message'=>"Hello world",
+        ]);
+
     }
 }

@@ -22,6 +22,7 @@ Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'
     ->name('verification.verify');
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/api/user_key_bundle/{receiver_id}',[AuthController::class,'getKeys'])->name('api.get_keys');
     Route::post('/api/save-public-keys',  [AuthController::class,'storePublicKey'])->name('api.save_keys');
     Route::post('/api/logout', [AuthController::class, 'logout'])->name('api.logout');;
     Route::controller(MessageController::class)->group(function () {
