@@ -7,7 +7,6 @@
 
 @section('content')
     <div class="d-flex w-100 h-100">
-        {{-- Sidebar inside content (chat list + search) --}}
         <div class="chat-sidebar bg-white border-end d-flex flex-column" style="width: 350px; overflow-y: auto;">
             <div class="sidebar-header d-flex align-items-center justify-content-between p-3 border-bottom">
                 <h5 class="mb-0 text-success fw-bold">We Chat</h5>

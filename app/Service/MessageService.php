@@ -38,13 +38,14 @@ class MessageService {
             $messageDto['message'],
             now())
         )->toOthers();
-        //caching the data to redis
+
         app(ChatCacheService::class)->pushMessage($messageDto['conversation_id'],$message['message'],$messageDto['sender_id'],now());
     }
     public function getSidebar(){
         $userId=auth()->id();
             $conversationIds = $this->conversationUserService->getConversationIdOfUser(auth()->id());
             $messages = $this->lastMessageRepository->getSidebar($conversationIds);
+
 
             $transformed = $messages->map(function ($item) use ($userId) {
                 $memberName = $memberId = null;
@@ -57,10 +58,9 @@ class MessageService {
                         break;
                     }
                 }
-
                 return [
                     'conversation_id' => $item->conversation_id,
-                    'last_message' => $item->message->message ?? null,
+                    'last_message' => $item->message->encrypted_message ?? null,
                     'is_read' => $item->message->is_read,
                     'last_message_time' => $item->message->updated_at ?? null,
                     'last_message_sender' => $item->message->user->id == $userId ? 'Myself' : $item->message->user->name,

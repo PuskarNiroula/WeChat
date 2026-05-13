@@ -20,6 +20,7 @@ Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'
     ->name('verification.verify');
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/api/user/public-key',[AuthController::class,'publicKey'])->name('getPublicKey');
     Route::post('/api/logout', [AuthController::class, 'logout'])->name('api.logout');;
     Route::controller(MessageController::class)->group(function () {
         Route::get('/getMessages/{id}', 'getChunkMessages')->name('getMessages');

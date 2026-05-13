@@ -1,10 +1,9 @@
 <?php
 namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
-use App\Models\ConUser;
-use App\Models\Message;
 use App\Service\ConversationUserService;
 use App\Service\MessageService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,7 +55,7 @@ public function sendMessage(Request $request): JsonResponse
            try{
             $this->messageService->createMessage($messageDto);
             return response()->json(['message' => 'Message sent successfully.']);
-           }catch (\Exception $e){
+           }catch (Exception $e){
             return response()->json([
                 'status'=> "Failed to send message",
                 'message'=> $e->getMessage(),

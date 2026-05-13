@@ -90,7 +90,8 @@
 
 </div>
 <script>
-    let csrf=`{{csrf_token()}}`;
+    let csrf = `{{ csrf_token() }}`;
+
     document.getElementById('login-form').addEventListener('submit', async function(e) {
         e.preventDefault();
 
@@ -98,7 +99,7 @@
         const password = this.password.value;
 
         try {
-            const response = await fetch('/login', {
+            const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -109,13 +110,73 @@
 
             const data = await response.json();
 
-            if (response.ok) {
-                // Save bearer token in localStorage
-                localStorage.setItem('token', data.token);
-                window.location.href = '/dashboard';
-            } else {
+            if (!response.ok) {
                 alert(data.message || 'Login failed!');
+                return;
             }
+
+            // 🔐 Save token
+            localStorage.setItem('token', data.token);
+
+            // =========================
+            // 🔐 E2EE KEY LOGIC START
+            // =========================
+
+            if (data.encryption?.needs_key_setup) {
+
+                console.log("Generating RSA keys...");
+
+                const keyPair = await window.crypto.subtle.generateKey(
+                    {
+                        name: "RSA-OAEP",
+                        modulusLength: 2048,
+                        publicExponent: new Uint8Array([1, 0, 1]),
+                        hash: "SHA-256"
+                    },
+                    true,
+                    ["encrypt", "decrypt"]
+                );
+
+                const publicKey = await window.crypto.subtle.exportKey(
+                    "spki",
+                    keyPair.publicKey
+                );
+
+                // Export private key
+                const privateKey = await window.crypto.subtle.exportKey(
+                    "pkcs8",
+                    keyPair.privateKey
+                );
+
+                // Convert to base64
+                const publicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(publicKey)));
+                const privateKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(privateKey)));
+
+                // Store PRIVATE KEY locally ONLY
+                localStorage.setItem('private_key', privateKeyBase64);
+
+                // Send PUBLIC KEY to backend
+                await fetch('/api/user/public-key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${data.token}`,
+                        'X-CSRF-TOKEN': csrf
+                    },
+                    body: JSON.stringify({
+                        public_key: publicKeyBase64
+                    })
+                });
+
+                console.log("RSA keys generated and public key sent!");
+            }
+
+            // =========================
+            // 🔐 E2EE KEY LOGIC END
+            // =========================
+
+            window.location.href = '/dashboard';
+
         } catch (err) {
             console.error(err);
             alert('An error occurred. Check console for details.');
