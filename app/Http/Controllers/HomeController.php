@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use App\Models\User;
 use App\Service\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -40,15 +41,32 @@ class HomeController extends Controller{
       try{
           $request->session();
           Auth::login($request->user());
-          $user = Auth::user();
+          $user = User::find(Auth::id());
 
           $token = $user->createToken($request->session()->getId());
           $token->accessToken->expires_at = now()->addHours(2);
           $token->accessToken->save();
 
+
+          $tokenResult = $user->createToken("Chat Api");
+          $token = $tokenResult->plainTextToken;
+          $tokenResult->accessToken->save();
+
+          $encryptionStatus = [
+              'enabled' => true,
+              'has_public_key' => !empty($user->public_key),
+              'needs_key_setup' => empty($user->public_key),
+          ];
+
           return response()->json([
-              'user'=> $user,
-              'token'=> $token->plainTextToken,
+              'user' => [
+                  'id' => $user->id,
+                  'name' => $user->name,
+                  'email' => $user->email,
+                  'avatar' => $user->avatar,
+              ],
+              'token' => $token,
+              'encryption' => $encryptionStatus,
           ]);
       }catch (\Exception $e){
           return response()->json([

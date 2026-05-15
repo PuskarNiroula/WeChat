@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 
 use App\Service\UserService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -39,7 +40,7 @@ class AuthController extends Controller
                 'user'=> $user,
                 'token'=> $token,
             ], 201);
-        }catch (\Exception $e){
+        }catch (Exception $e){
             return response()->json([
                 'status'=> "Failed to register",
                 'message'=> $e->getMessage()
@@ -57,11 +58,11 @@ class AuthController extends Controller
     /**
      * @throws ValidationException
      */
-    public function login(Request $request):JsonResponse
+    public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'email'=> 'required|email',
-            'password'=> 'required|string',
+            'email' => 'required|email',
+            'password' => 'required|string',
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -71,20 +72,33 @@ class AuthController extends Controller
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
-        if(!$user->hasVerifiedEmail()){
+
+        if (! $user->hasVerifiedEmail()) {
             return response()->json([
-                'status'=> "Error",
-                'message'=> "Please verify your email address to login"
-            ],403);
+                'status' => "Error",
+                'message' => "Please verify your email address to login"
+            ], 403);
         }
 
-        $token = $user->createToken("Chat Api");
-        $token->accessToken->expires_at = now()->addHours(2);
-        $token->accessToken->save();
+        $tokenResult = $user->createToken("Chat Api");
+        $token = $tokenResult->plainTextToken;
+        $tokenResult->accessToken->save();
+
+        $encryptionStatus = [
+            'enabled' => true,
+            'has_public_key' => !empty($user->public_key),
+            'needs_key_setup' => empty($user->public_key),
+        ];
 
         return response()->json([
-            'user'=> $user,
-            'token'=> $token->plainTextToken,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'avatar' => $user->avatar,
+            ],
+            'token' => $token,
+            'encryption' => $encryptionStatus,
         ]);
     }
 
@@ -162,5 +176,36 @@ class AuthController extends Controller
     public function me(Request $request):JsonResponse
     {
         return response()->json($request->user());
+    }
+
+    public function publicKey(Request $request): JsonResponse
+    {
+        $request->validate([
+            'public_key' => 'required|string',
+            // ❌ Remove private_key validation entirely
+        ]);
+
+        $user = $request->user();
+
+        if (!empty($user->public_key)) {
+            return response()->json([
+                'message' => 'Public key already exists. Use key rotation endpoint to update it.'
+            ], 409);
+        }
+
+        // Only store the public key
+        $user->public_key = $request->input('public_key');
+        $user->save();
+
+        return response()->json([
+            'message' => 'Public key saved successfully'
+        ]);
+    }
+    public function getMyKey(): JsonResponse
+    {
+        $key=User::find(auth()->id())->private_key;
+        return response()->json(
+            $key
+        );
     }
 }

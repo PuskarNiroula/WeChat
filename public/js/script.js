@@ -5,22 +5,26 @@ function getToken() {
 
 // Secure fetch wrapper
 async function secureFetch(url, options = {}) {
-    options = options || {}
-    options.headers = { ...(options.headers || {}) }
+    options = options || {};
+    options.headers = { ...(options.headers || {}) };
 
-    const token = getToken()
-    if (token) options.headers.Authorization = `Bearer ${token}`
+    const token = getToken();
 
-    // Only stringify if it's a plain object, leave FormData as-is
+    if (token) {
+        options.headers.Authorization = `Bearer ${token}`;
+    }
+
     if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
-        options.body = JSON.stringify(options.body)
-        options.headers['Content-Type'] = 'application/json'
+        options.body = JSON.stringify(options.body);
+        options.headers['Content-Type'] = 'application/json';
     }
 
-    const response = await fetch(url, options)
+    const response = await fetch(url, options);
+
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || 'Request failed')
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Request failed');
     }
-    return response.json()
+
+    return response.json();
 }

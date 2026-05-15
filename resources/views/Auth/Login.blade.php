@@ -71,6 +71,7 @@
     </style>
 </head>
 <body>
+@vite('resources/js/app.js')
 <div class="login-box">
     <h1>WeChat</h1>
 
@@ -90,36 +91,86 @@
 
 </div>
 <script>
-    let csrf=`{{csrf_token()}}`;
-    document.getElementById('login-form').addEventListener('submit', async function(e) {
+        let csrf = `{{ csrf_token() }}`;
+
+        document.getElementById('login-form').addEventListener('submit', async function (e) {
         e.preventDefault();
 
         const email = this.email.value;
         const password = this.password.value;
 
         try {
-            const response = await fetch('/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrf
-                },
-                body: JSON.stringify({ email, password })
-            });
+        const response = await fetch('/login', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrf
+    },
+        body: JSON.stringify({ email, password })
+    });
 
-            const data = await response.json();
+        const data = await response.json();
 
-            if (response.ok) {
-                // Save bearer token in localStorage
-                localStorage.setItem('token', data.token);
-                window.location.href = '/dashboard';
-            } else {
-                alert(data.message || 'Login failed!');
-            }
-        } catch (err) {
-            console.error(err);
-            alert('An error occurred. Check console for details.');
-        }
+        if (!response.ok) {
+        alert(data.message || 'Login failed!');
+        return;
+    }
+
+        const token = data.token;
+        const userId=data.user.id;
+
+        localStorage.setItem('user_id', userId);
+
+        localStorage.setItem('token', token);
+
+        if (data.encryption?.needs_key_setup) {
+        console.log("Generating ECDH key pair...");
+
+
+        const keyPair = await crypto.subtle.generateKey(
+            {name: "ECDH", namedCurve: "P-256"},
+            true,
+            ["deriveKey"]
+        );
+
+
+        const rawPublicKey = await crypto.subtle.exportKey("raw", keyPair.publicKey);
+        const publicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(rawPublicKey)));
+
+        const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
+        localStorage.setItem(`private_key_${userId}`, JSON.stringify(privateKeyJwk));
+        console.log("ECDH key pair generated and stored locally.");
+
+        await fetch('/api/user/public-key', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    },
+        body: JSON.stringify({
+        public_key: publicKeyBase64
+    })
+    });
+
+        console.log("Public key stored on server, private key stored locally");
+
+    } else {
+        const stored = localStorage.getItem(`private_key_${userId}`);
+
+        if (!stored) {
+        alert("Private key not found on this device. You may need to reset your keys.");
+        return;
+    }
+
+        console.log("Private key found in localStorage.");
+    }
+
+        window.location.href = '/dashboard';
+
+    } catch (err) {
+        console.error("Login error:", err);
+        alert('An error occurred. Check console for details.');
+    }
     });
 </script>
 </body>

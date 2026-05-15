@@ -1,6 +1,7 @@
 <?php
 namespace App\Repository;
 
+use App\Enums\MessageTypeEnum;
 use App\Interface\MessageRepositoryInterface;
 use App\Models\Message;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -12,7 +13,9 @@ class MessageRepository implements MessageRepositoryInterface
        return Message::create([
             'conversation_id'=>$messageDto['conversation_id'],
             'sender_id'=>$messageDto['sender_id'],
-            'message'=>$messageDto['message']
+            'message_type'=>MessageTypeEnum::TEXT,
+            'encrypted_message'=>$messageDto['message'],
+           'iv'=>$messageDto['iv'],
         ]);
 
     }

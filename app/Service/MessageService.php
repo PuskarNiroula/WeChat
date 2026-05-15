@@ -33,18 +33,24 @@ class MessageService {
             $this->lastMessageRepository->createLastMessage($messageDto['conversation_id'],$message->id);
         }
         DB::commit();
-        broadcast(new MessageSent( $this->conversationUserService->getReceiverId($messageDto['conversation_id']),
-            $messageDto['conversation_id'],
-            $messageDto['message'],
-            now())
+        broadcast(
+            new MessageSent(
+                $this->conversationUserService->getReceiverId($messageDto['conversation_id']),
+                $messageDto['conversation_id'],
+                $messageDto['message'],
+                now()
+            )
         )->toOthers();
-        //caching the data to redis
-        app(ChatCacheService::class)->pushMessage($messageDto['conversation_id'],$message['message'],$messageDto['sender_id'],now());
+
+
+
+        app(ChatCacheService::class)->pushMessage($messageDto['conversation_id'],$message['encrypted_message'],$messageDto['iv'],$messageDto['sender_id'],now());
     }
     public function getSidebar(){
         $userId=auth()->id();
             $conversationIds = $this->conversationUserService->getConversationIdOfUser(auth()->id());
             $messages = $this->lastMessageRepository->getSidebar($conversationIds);
+
 
             $transformed = $messages->map(function ($item) use ($userId) {
                 $memberName = $memberId = null;
@@ -57,15 +63,15 @@ class MessageService {
                         break;
                     }
                 }
-
                 return [
                     'conversation_id' => $item->conversation_id,
-                    'last_message' => $item->message->message ?? null,
+                    'last_message' => $item->message->encrypted_message ?? null,
                     'is_read' => $item->message->is_read,
                     'last_message_time' => $item->message->updated_at ?? null,
                     'last_message_sender' => $item->message->user->id == $userId ? 'Myself' : $item->message->user->name,
                     'chat_member' => $memberName,
                     'chat_member_id' => $memberId,
+                    'iv' => $item->message->iv,
                     "avatar" => $avatar ?? "avatar.jpg",
                 ];
             });
@@ -97,15 +103,18 @@ class MessageService {
             return [
                 'source'=>"database",
                 'sender_id' => $item->sender_id,
-                'message' => $item->message,
+                'message' => $item->encrypted_message,
+                'iv'=>$item->iv,
                 'time'=>$item->created_at,
             ];
         });
         //pulling data to redis
         foreach($transformed->values()->toArray() as $message){
+
             app(ChatCacheService::class)->pushMessage(
                 $conversation_id,
                 $message['message'],
+                $message['iv'],
                 $message['sender_id'],
                 $message['time']
             );

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ExtraController;
+use App\Http\Controllers\Api\KeyController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\VerificationController;
@@ -20,16 +21,25 @@ Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'
     ->name('verification.verify');
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/api/logout', [AuthController::class, 'logout'])->name('api.logout');;
+    Route::controller(AuthController::class)->group(function () {
+        Route::post('/api/user/public-key', 'publicKey')->name('getPublicKey');
+        Route::get('/api/get-my-key', 'getMyKey')->name('getMyKey');
+        Route::post('/api/logout', 'logout')->name('api.logout');
+    });
+
+    Route::get('/api/user/{receiverId}/public-key',[KeyController::class,'getPublicKey'])->name('getPublicKey');
+
     Route::controller(MessageController::class)->group(function () {
         Route::get('/getMessages/{id}', 'getChunkMessages')->name('getMessages');
         Route::post('/sendMessage', 'sendMessage')->name('sendMessage');
         Route::get("/openChat/{id}","createOrFindConversation")->name("openChat");
     });
+
     Route::controller(ExtraController::class)->group(function () {
         Route::get('/search/{string}', 'search')->name('searchUsers');
         Route::get("/getSidebarMembers","getSidebar")->name("getSidebarMembers");
     });
+
     Route::post('/updateProfile',[ProfileController::class,'updateProfile'])->name('updateProfile');
 });
 

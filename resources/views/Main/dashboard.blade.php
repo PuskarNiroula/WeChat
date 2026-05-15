@@ -7,7 +7,6 @@
 
 @section('content')
     <div class="d-flex w-100 h-100">
-        {{-- Sidebar inside content (chat list + search) --}}
         <div class="chat-sidebar bg-white border-end d-flex flex-column" style="width: 350px; overflow-y: auto;">
             <div class="sidebar-header d-flex align-items-center justify-content-between p-3 border-bottom">
                 <h5 class="mb-0 text-success fw-bold">We Chat</h5>
@@ -62,19 +61,85 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        let selectedUserId=null;
         let conId=null;
         const myId=`{{Auth::id()}}`;
+
         let ChatUser=document.getElementById('chat_user');
         const chatMessages = document.querySelector('.chat-messages');
+
 
         $("#sendMessageForm").submit( function (e){
             e.preventDefault();
             sendMessage();
         });
+        // Run on EACH tab — compare private key x with what server has for that user
+        async function diagnoseKeyMismatch(myUserId) {
+            // My private key in localStorage
+            const jwk = JSON.parse(localStorage.getItem('private_key'));
+            console.log('localStorage private key (x):', jwk.x);
+            console.log('localStorage private key (y):', jwk.y);
+
+            // My public key on server
+            const res = await secureFetch(`/api/user/${myUserId}/public-key`);
+            console.log('Server public key:', res.public_key);
+
+            // Decode server public key to x,y to compare
+            const raw = Uint8Array.from(atob(res.public_key), c => c.charCodeAt(0));
+            const serverPub = await crypto.subtle.importKey(
+                'raw', raw,
+                { name: 'ECDH', namedCurve: 'P-256' },
+                true, []
+            );
+            const serverJwk = await crypto.subtle.exportKey('jwk', serverPub);
+            console.log('Server public key (x):', serverJwk.x);
+            console.log('Server public key (y):', serverJwk.y);
+
+            // ✅ These x values must match — if not, server has wrong public key
+            console.log('Keys match:', jwk.x === serverJwk.x ? '✅ YES' : '❌ NO — server has stale key!');
+        }
+
+        // Run with YOUR OWN user ID on each tab
+        // SENDER tab: debugSharedKey(receiverId)
+        // RECEIVER tab: debugSharedKey(senderId)
+        async function debugSharedKey(otherUserId) {
+            const jwk = JSON.parse(localStorage.getItem('private_key'));
+            console.log('My private key (x):', jwk.x); // compare these
+
+            const res = await secureFetch(`/api/user/${otherUserId}/public-key`);
+            console.log('Other public key:', res.public_key);
+
+            const privKey = await crypto.subtle.importKey(
+                'jwk', jwk,
+                { name: 'ECDH', namedCurve: 'P-256' },
+                false, ['deriveKey']
+            );
+
+            const pubKey = await crypto.subtle.importKey(
+                'raw',
+                Uint8Array.from(atob(res.public_key), c => c.charCodeAt(0)),
+                { name: 'ECDH', namedCurve: 'P-256' },
+                false, []
+            );
+
+            const sharedKey = await crypto.subtle.deriveKey(
+                { name: 'ECDH', public: pubKey },
+                privKey,
+                { name: 'AES-GCM', length: 256 },
+                true, ['encrypt', 'decrypt']
+            );
+
+            const raw = await crypto.subtle.exportKey('raw', sharedKey);
+            const hex = [...new Uint8Array(raw)]
+                .map(b => b.toString(16).padStart(2, '0')).join('');
+
+            console.log('🔑 Shared key hex:', hex);
+            // This MUST be identical on both tabs
+        }
+
 
         function addMessageToChatList(message,time,className='received'){
-            console.log(message +":"+ time)
-            // Create main message container
+
             let messageDiv = document.createElement('div');
             messageDiv.classList.add('message-bubble', className);
 
@@ -88,7 +153,6 @@
                 hour: '2-digit',
                 minute: '2-digit'
             });
-            // Append safely
             messageDiv.appendChild(messageText);
             messageDiv.appendChild(timeEl);
             chatMessages.appendChild(messageDiv);
@@ -96,7 +160,7 @@
             chatMessages.scrollTop=chatMessages.scrollHeight;
         }
             function loadDashboard() {
-                if (conId != null) {
+                if (conId != null && selectedUserId != null) {
                     loadMessages(conId);
                     loadSidebar();
                 }
@@ -111,31 +175,55 @@
 
                     conId = conversationId;
                     const res = await secureFetch(`/getMessages/${conversationId}`, {method: "GET"});
-                    // Handle both array and object responses
-                    const messages = res.data || res.messages || res;
+                    const messages =  res.messages ;
 
 
-                    chatMessages.innerHTML = ''; // Clear previous messages
+                    chatMessages.innerHTML = '';
 
                     if (!messages || messages.length === 0) {
                         chatMessages.innerHTML = `<div class="text-muted text-center mt-4">No messages yet</div>`;
                         return;
                     }
+                    let sharedKey = await getSharedKey(selectedUserId);
 
-                    messages.slice().reverse().forEach(msg => {
-                        const isOwnMessage = msg.sender_id === parseInt(myId); // myId = logged-in user id
+
+                    const decryptedMessages = await Promise.all(
+                        messages.slice().reverse().map(async (msg) => {
+                            try {
+                                const decrypted = await decryptMessage(
+                                    msg.message,
+                                    msg.iv,
+                                    sharedKey
+                                );
+
+                                return {
+                                    ...msg,
+                                    decrypted
+                                };
+                            } catch (e) {
+                                console.log("Decrypt failed for message:", msg, e);
+
+                                return {
+                                    ...msg,
+                                    decrypted: "[unable to decrypt]"
+                                };
+                            }
+                        })
+                    );
+
+
+                    for (const msg of decryptedMessages) {
+
+                        const isOwnMessage = msg.sender_id === parseInt(myId);
                         const messageClass = isOwnMessage ? 'sent' : 'received';
 
-                        // Create main message container
                         const messageDiv = document.createElement('div');
                         messageDiv.classList.add('message-bubble', messageClass);
 
-                        // Create message text node
                         const messageText = document.createElement('p');
                         messageText.classList.add('mb-0');
-                        messageText.textContent = msg.message; // Safe (no HTML injection)
+                        messageText.textContent = msg.decrypted;
 
-                        // Create time element
                         const timeEl = document.createElement('small');
                         timeEl.classList.add('text-muted');
                         timeEl.textContent = new Date(msg.time).toLocaleTimeString([], {
@@ -143,11 +231,10 @@
                             minute: '2-digit'
                         });
 
-                        // Append safely
                         messageDiv.appendChild(messageText);
                         messageDiv.appendChild(timeEl);
                         chatMessages.appendChild(messageDiv);
-                    });
+                    }
 
 
                     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -159,92 +246,113 @@
             }
 
 
-            async function loadSidebar() {
-                try {
-                    const users = await secureFetch('/getSidebarMembers'); // your protected API call
-                    const chatList = document.querySelector('.chat-list');
-                    chatList.innerHTML = '';
+        async function loadSidebar() {
+            try {
+                const users = await secureFetch('/getSidebarMembers');
+                const chatList = document.querySelector('.chat-list');
+                chatList.innerHTML = '';
 
-                    users.forEach(user => {
-                        const username = user.chat_member || 'Unknown User';
-                        const lastMessage = user.last_message || 'No message yet';
-                        const avatarPath = "/images/avatars/" + user.avatar;
+                for (const user of users) {
 
-                        const isUnread = user.last_message_sender !== 'Myself' && user.is_read === 0;
-                        let messageColor = isUnread ? 'red' : 'black';
-                        let messageFont = isUnread ? 'bold' : 'normal';
-                        if(user.conversation_id===conId) {
-                            messageColor = 'black';
-                            messageFont='normal';
+                    const username = user.chat_member || 'Unknown User';
+                    const lastMessage = user.last_message || '';
+                    const iv = user.iv;
+
+                    const avatarPath = "/images/avatars/" + user.avatar;
+
+                    const sharedKey = await getSharedKey(user.chat_member_id);
+
+                    console.log("shared key: "+sharedKey);
+
+                    let previewMessage = lastMessage;
+
+                    try {
+                        if (lastMessage && iv) {
+                            previewMessage = await decryptMessage(
+                                lastMessage,
+                                iv,
+                                sharedKey
+                            );
                         }
+                    } catch (e) {
+                        console.warn("Sidebar decrypt failed:", e);
+                    }
 
+                    const chatItem = document.createElement('div');
+                    chatItem.classList.add('chat-item');
 
-                        // Create main chat item
-                        const chatItem = document.createElement('div');
-                        chatItem.classList.add('chat-item');
+                    const avatarImg = document.createElement('img');
+                    avatarImg.src = avatarPath;
 
-                        // Create and set avatar safely
-                        const avatarImg = document.createElement('img');
-                        avatarImg.src = avatarPath;
-                        avatarImg.alt = 'Avatar';
+                    const chatInfo = document.createElement('div');
+                    chatInfo.classList.add('chat-info');
 
-                        // Chat info container
-                        const chatInfo = document.createElement('div');
-                        chatInfo.classList.add('chat-info');
+                    const userNameEl = document.createElement('h6');
+                    userNameEl.textContent = username;
 
-                        // Username
-                        const userNameEl = document.createElement('h6');
-                        userNameEl.textContent = username;
+                    const lastMsgEl = document.createElement('small');
+                    lastMsgEl.textContent = previewMessage;
 
-                        // Last message
-                        const lastMsgEl = document.createElement('small');
-                        lastMsgEl.style.color = messageColor;
-                        lastMsgEl.style.fontWeight = messageFont;
-                        lastMsgEl.textContent = lastMessage;
+                    chatInfo.appendChild(userNameEl);
+                    chatInfo.appendChild(lastMsgEl);
 
-                        // Append everything safely
-                        chatInfo.appendChild(userNameEl);
-                        chatInfo.appendChild(lastMsgEl);
-                        chatItem.appendChild(avatarImg);
-                        chatItem.appendChild(chatInfo);
+                    chatItem.appendChild(avatarImg);
+                    chatItem.appendChild(chatInfo);
 
-                        // Add click event
-                        chatItem.addEventListener('click', () => {
-                            createOrOpenChat(user.chat_member_id);
-                        });
-
-                        chatList.appendChild(chatItem);
+                    chatItem.addEventListener('click', () => {
+                        selectedUserId = user.chat_member_id;
+                        createOrOpenChat(user.chat_member_id);
                     });
-                } catch (error) {
-                    console.error('Error loading sidebar:', error);
+
+                    chatList.appendChild(chatItem);
                 }
+
+            } catch (error) {
+                console.error('Error loading sidebar:', error);
             }
+        }
             document.addEventListener('DOMContentLoaded', loadSidebar);
 
 
-            async function sendMessage() {
-                const message = document.getElementById("message_to_be_sent").value.trim();
-                if (!message) {
-                    return;
-                }
-                try {
-                    addMessageToChatList(message, `{{now()}}`, "sent");
-                    await secureFetch(`/sendMessage`, {
-                        method: 'POST',
-                        body: {
-                            message: message,
-                            conversation_id: conId,
-                        }
-                    });
-                    loadSidebar();
-                    document.getElementById("message_to_be_sent").value = "";
-                } catch (err) {
-                    console.log(err);
-                }
+        async function sendMessage() {
+            const input = document.getElementById("message_to_be_sent");
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            try {
+                const sharedKey = await getSharedKey(selectedUserId);
+
+                const encrypted = await encryptMessage(message, sharedKey);
+                console.log(encrypted);
+                console.log(
+                    "IV bytes:",
+                    Uint8Array.from(atob(encrypted.iv), c => c.charCodeAt(0)).length
+                );
+
+                await secureFetch(`/sendMessage`, {
+                    method: 'POST',
+                    body: {
+                        conversation_id: conId,
+                        encrypted_message: encrypted.data,
+                        iv: encrypted.iv
+                    }
+                });
+
+                // show instantly
+                addMessageToChatList(message, `{{now()}}`, "sent");
+
+                input.value = "";
+                loadSidebar();
+
+            } catch (err) {
+                console.error("Send message error:", err);
             }
+        }
 
             async function createOrOpenChat(user_id) {
                 try {
+                    selectedUserId = user_id;
                     const res = await secureFetch(`/openChat/${user_id}`, {method: "GET"});
                     ChatUser.innerHTML = res.name;
                     if (res.avatar != null) {
@@ -256,8 +364,6 @@
                 }
             }
 
-
-            // Debounce function: delays execution until user stops typing
             function debounce(fn, delay) {
                 let timer;
                 return function (...args) {
