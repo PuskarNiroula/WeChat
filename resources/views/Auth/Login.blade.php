@@ -71,6 +71,7 @@
     </style>
 </head>
 <body>
+@vite('resources/js/app.js')
 <div class="login-box">
     <h1>WeChat</h1>
 
@@ -90,97 +91,86 @@
 
 </div>
 <script>
-    let csrf = `{{ csrf_token() }}`;
+        let csrf = `{{ csrf_token() }}`;
 
-    document.getElementById('login-form').addEventListener('submit', async function(e) {
+        document.getElementById('login-form').addEventListener('submit', async function (e) {
         e.preventDefault();
 
         const email = this.email.value;
         const password = this.password.value;
 
         try {
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrf
-                },
-                body: JSON.stringify({ email, password })
-            });
+        const response = await fetch('/login', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrf
+    },
+        body: JSON.stringify({ email, password })
+    });
 
-            const data = await response.json();
+        const data = await response.json();
 
-            if (!response.ok) {
-                alert(data.message || 'Login failed!');
-                return;
-            }
+        if (!response.ok) {
+        alert(data.message || 'Login failed!');
+        return;
+    }
 
-            // 🔐 Save token
-            localStorage.setItem('token', data.token);
+        const token = data.token;
+        const userId=data.user.id;
 
-            // =========================
-            // 🔐 E2EE KEY LOGIC START
-            // =========================
+        localStorage.setItem('user_id', userId);
 
-            if (data.encryption?.needs_key_setup) {
+        localStorage.setItem('token', token);
 
-                console.log("Generating RSA keys...");
+        if (data.encryption?.needs_key_setup) {
+        console.log("Generating ECDH key pair...");
 
-                const keyPair = await window.crypto.subtle.generateKey(
-                    {
-                        name: "RSA-OAEP",
-                        modulusLength: 2048,
-                        publicExponent: new Uint8Array([1, 0, 1]),
-                        hash: "SHA-256"
-                    },
-                    true,
-                    ["encrypt", "decrypt"]
-                );
 
-                const publicKey = await window.crypto.subtle.exportKey(
-                    "spki",
-                    keyPair.publicKey
-                );
+        const keyPair = await crypto.subtle.generateKey(
+            {name: "ECDH", namedCurve: "P-256"},
+            true,
+            ["deriveKey"]
+        );
 
-                // Export private key
-                const privateKey = await window.crypto.subtle.exportKey(
-                    "pkcs8",
-                    keyPair.privateKey
-                );
 
-                // Convert to base64
-                const publicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(publicKey)));
-                const privateKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(privateKey)));
+        const rawPublicKey = await crypto.subtle.exportKey("raw", keyPair.publicKey);
+        const publicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(rawPublicKey)));
 
-                // Store PRIVATE KEY locally ONLY
-                localStorage.setItem('private_key', privateKeyBase64);
+        const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
+        localStorage.setItem(`private_key_${userId}`, JSON.stringify(privateKeyJwk));
+        console.log("ECDH key pair generated and stored locally.");
 
-                // Send PUBLIC KEY to backend
-                await fetch('/api/user/public-key', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${data.token}`,
-                        'X-CSRF-TOKEN': csrf
-                    },
-                    body: JSON.stringify({
-                        public_key: publicKeyBase64
-                    })
-                });
+        await fetch('/api/user/public-key', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    },
+        body: JSON.stringify({
+        public_key: publicKeyBase64
+    })
+    });
 
-                console.log("RSA keys generated and public key sent!");
-            }
+        console.log("Public key stored on server, private key stored locally");
 
-            // =========================
-            // 🔐 E2EE KEY LOGIC END
-            // =========================
+    } else {
+        const stored = localStorage.getItem(`private_key_${userId}`);
 
-            window.location.href = '/dashboard';
+        if (!stored) {
+        alert("Private key not found on this device. You may need to reset your keys.");
+        return;
+    }
 
-        } catch (err) {
-            console.error(err);
-            alert('An error occurred. Check console for details.');
-        }
+        console.log("Private key found in localStorage.");
+    }
+
+        window.location.href = '/dashboard';
+
+    } catch (err) {
+        console.error("Login error:", err);
+        alert('An error occurred. Check console for details.');
+    }
     });
 </script>
 </body>

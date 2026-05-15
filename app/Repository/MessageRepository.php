@@ -14,7 +14,8 @@ class MessageRepository implements MessageRepositoryInterface
             'conversation_id'=>$messageDto['conversation_id'],
             'sender_id'=>$messageDto['sender_id'],
             'message_type'=>MessageTypeEnum::TEXT,
-            'message'=>$messageDto['message']
+            'encrypted_message'=>$messageDto['message'],
+           'iv'=>$messageDto['iv'],
         ]);
 
     }

@@ -33,10 +33,12 @@ class MessageController extends Controller
     }
 public function sendMessage(Request $request): JsonResponse
 {
-        $conversation_id=$request->conversation_id;
-        $message=$request->message;
+        $conversation_id=$request->input('conversation_id');
+        $message=$request->input('encrypted_message');
+        $iv=$request->input('iv');
 
-        $maxLength = 1000;
+
+        $maxLength = 10000;
         if (empty($message) || !is_string($message) || trim($message) === '') {
             return response()->json(['error' => 'Message cannot be empty.'], 422);
         }
@@ -51,6 +53,7 @@ public function sendMessage(Request $request): JsonResponse
             'conversation_id'=>$conversation_id,
             'message'=>$message,
             'sender_id'=>Auth::id(),
+            'iv'=>$iv,
         ];
            try{
             $this->messageService->createMessage($messageDto);
