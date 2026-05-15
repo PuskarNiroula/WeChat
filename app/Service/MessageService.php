@@ -108,7 +108,6 @@ class MessageService {
                 'time'=>$item->created_at,
             ];
         });
-        //pulling data to redis
         foreach($transformed->values()->toArray() as $message){
 
             app(ChatCacheService::class)->pushMessage(

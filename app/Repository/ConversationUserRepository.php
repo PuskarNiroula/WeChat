@@ -33,6 +33,15 @@ class ConversationUserRepository implements ConversationUserRepositoryInterface
         DB::commit();
         return ConUser::where('conversation_id',$conversationId)->where('user_id',$userId)->with('user')->first();
     }
+    public function CreatePrivateConversation($list,$conversationId):void{
+        foreach($list as $dto){
+            ConUser::create([
+                'user_id'=>$dto->userId,
+                'conversation_id'=>$conversationId,
+                'encrypted_key'=>$dto->encryptedKey
+            ]);
+        }
+    }
 
     public function getReceiverId(int $conversationId): int
     {

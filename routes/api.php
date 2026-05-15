@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\ExtraController;
 use App\Http\Controllers\Api\KeyController;
 use App\Http\Controllers\Api\MessageController;
@@ -41,6 +42,13 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::post('/updateProfile',[ProfileController::class,'updateProfile'])->name('updateProfile');
+
+    Route::controller(ConversationController::class)->group(function () {
+        Route::get('/api/conversation/{receiverId}/check','checkConversation')->name('checkConversation');
+        Route::post('/api/conversation/create-private-conversation','createPrivateConversation')->name('createPrivateConversation');
+    });
+
+
 });
 
 
