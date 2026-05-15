@@ -19,26 +19,12 @@ class ConversationUserRepository implements ConversationUserRepositoryInterface
                      ->first();
     }
 
-    public function CreateConversation( int $conversationId,int $userId, int $myId): ConUser
-    {
-        DB::beginTransaction();
-        ConUser::create([
-            'user_id'=>$userId,
-            'conversation_id'=>$conversationId
-        ]);
-        ConUser::create([
-            'user_id'=>$myId,
-            'conversation_id'=>$conversationId
-        ]);
-        DB::commit();
-        return ConUser::where('conversation_id',$conversationId)->where('user_id',$userId)->with('user')->first();
-    }
-    public function CreatePrivateConversation($list,$conversationId):void{
+    public function createPrivateConversation($list, $conversationId):void{
         foreach($list as $dto){
             ConUser::create([
                 'user_id'=>$dto->userId,
                 'conversation_id'=>$conversationId,
-                'encrypted_key'=>$dto->encryptedKey
+                'encrypted_room_key'=>$dto->encryptedKey
             ]);
         }
     }

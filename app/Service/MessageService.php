@@ -4,6 +4,7 @@ namespace App\Service;
 use App\Events\MessageSent;
 use App\Interface\LastMessageRepositoryInterface;
 use App\Interface\MessageRepositoryInterface;
+use App\Models\ConUser;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -75,6 +76,7 @@ class MessageService {
                     "avatar" => $avatar ?? "avatar.jpg",
                 ];
             });
+
             return $transformed->values();
 
 

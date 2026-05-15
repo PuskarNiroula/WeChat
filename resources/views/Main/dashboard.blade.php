@@ -73,70 +73,6 @@
             e.preventDefault();
             sendMessage();
         });
-        // Run on EACH tab — compare private key x with what server has for that user
-        async function diagnoseKeyMismatch(myUserId) {
-            // My private key in localStorage
-            const jwk = JSON.parse(localStorage.getItem('private_key'));
-            console.log('localStorage private key (x):', jwk.x);
-            console.log('localStorage private key (y):', jwk.y);
-
-            // My public key on server
-            const res = await secureFetch(`/api/user/${myUserId}/public-key`);
-            console.log('Server public key:', res.public_key);
-
-            // Decode server public key to x,y to compare
-            const raw = Uint8Array.from(atob(res.public_key), c => c.charCodeAt(0));
-            const serverPub = await crypto.subtle.importKey(
-                'raw', raw,
-                { name: 'ECDH', namedCurve: 'P-256' },
-                true, []
-            );
-            const serverJwk = await crypto.subtle.exportKey('jwk', serverPub);
-            console.log('Server public key (x):', serverJwk.x);
-            console.log('Server public key (y):', serverJwk.y);
-
-            // ✅ These x values must match — if not, server has wrong public key
-            console.log('Keys match:', jwk.x === serverJwk.x ? '✅ YES' : '❌ NO — server has stale key!');
-        }
-
-        // Run with YOUR OWN user ID on each tab
-        // SENDER tab: debugSharedKey(receiverId)
-        // RECEIVER tab: debugSharedKey(senderId)
-        async function debugSharedKey(otherUserId) {
-            const jwk = JSON.parse(localStorage.getItem('private_key'));
-            console.log('My private key (x):', jwk.x); // compare these
-
-            const res = await secureFetch(`/api/user/${otherUserId}/public-key`);
-            console.log('Other public key:', res.public_key);
-
-            const privKey = await crypto.subtle.importKey(
-                'jwk', jwk,
-                { name: 'ECDH', namedCurve: 'P-256' },
-                false, ['deriveKey']
-            );
-
-            const pubKey = await crypto.subtle.importKey(
-                'raw',
-                Uint8Array.from(atob(res.public_key), c => c.charCodeAt(0)),
-                { name: 'ECDH', namedCurve: 'P-256' },
-                false, []
-            );
-
-            const sharedKey = await crypto.subtle.deriveKey(
-                { name: 'ECDH', public: pubKey },
-                privKey,
-                { name: 'AES-GCM', length: 256 },
-                true, ['encrypt', 'decrypt']
-            );
-
-            const raw = await crypto.subtle.exportKey('raw', sharedKey);
-            const hex = [...new Uint8Array(raw)]
-                .map(b => b.toString(16).padStart(2, '0')).join('');
-
-            console.log('🔑 Shared key hex:', hex);
-            // This MUST be identical on both tabs
-        }
-
 
         function addMessageToChatList(message,time,className='received'){
 
@@ -184,7 +120,7 @@
                         chatMessages.innerHTML = `<div class="text-muted text-center mt-4">No messages yet</div>`;
                         return;
                     }
-                    let sharedKey = await getSharedKey(selectedUserId);
+                    let sharedKey = await getSharedKey(conId);
 
 
                     const decryptedMessages = await Promise.all(
@@ -201,11 +137,10 @@
                                     decrypted
                                 };
                             } catch (e) {
-                                console.log("Decrypt failed for message:", msg, e);
 
                                 return {
                                     ...msg,
-                                    decrypted: "[unable to decrypt]"
+                                    decrypted: null
                                 };
                             }
                         })
@@ -260,9 +195,8 @@
 
                     const avatarPath = "/images/avatars/" + user.avatar;
 
-                    const sharedKey = await getSharedKey(user.chat_member_id);
+                    const sharedKey = await getSharedKey(user.conversation_id);
 
-                    console.log("shared key: "+sharedKey);
 
                     let previewMessage = lastMessage;
 
@@ -321,14 +255,11 @@
             if (!message) return;
 
             try {
-                const sharedKey = await getSharedKey(selectedUserId);
+                const sharedKey = await getSharedKey(conId);
+                console.log("working tillhere");
 
                 const encrypted = await encryptMessage(message, sharedKey);
-                console.log(encrypted);
-                console.log(
-                    "IV bytes:",
-                    Uint8Array.from(atob(encrypted.iv), c => c.charCodeAt(0)).length
-                );
+                console.log("working here after encyrption");
 
                 await secureFetch(`/sendMessage`, {
                     method: 'POST',
@@ -339,7 +270,6 @@
                     }
                 });
 
-                // show instantly
                 addMessageToChatList(message, `{{now()}}`, "sent");
 
                 input.value = "";
@@ -350,19 +280,35 @@
             }
         }
 
-            async function createOrOpenChat(user_id) {
-                try {
-                    selectedUserId = user_id;
-                    const res = await secureFetch(`/openChat/${user_id}`, {method: "GET"});
-                    ChatUser.innerHTML = res.name;
-                    if (res.avatar != null) {
-                        $('#avatar-pic').attr('src', '/images/avatars/' + res.avatar);
-                    }
-                    loadMessages(res.conversation_id);
-                } catch (err) {
-                    console.error("Error fetching messages:", err.message);
+        async function createOrOpenChat(user_id) {
+            try {
+                selectedUserId = user_id;
+
+                let response = await secureFetch(`/api/conversation/${user_id}/check`, {
+                    method: "GET"
+                });
+
+                let data = await response;
+                conId=data.conversationId;
+
+                if (!data || !data.conversationId) {
+
+                    response = await createConversation(user_id);
+                    data = await response;
                 }
+
+                ChatUser.innerHTML = data.name;
+
+                if (data.avatar != null) {
+                    $('#avatar-pic').attr('src', '/images/avatars/' + data.avatar);
+                }
+
+                loadMessages(conId);
+            } catch (err) {
+                console.error("Error fetching messages:", err.message);
             }
+        }
+
 
             function debounce(fn, delay) {
                 let timer;
@@ -415,17 +361,15 @@
 
             const resultsContainer = document.getElementById('searchResults');
 
-            // Attach debounced input listener
             const searchInput = document.getElementById('searchInput');
             searchInput.addEventListener('input', debounce((e) => {
                 search(e.target.value);
             }, 500));
             resultsContainer.addEventListener('mousedown', (e) => {
-                e.preventDefault(); // prevent blur before click
+                e.preventDefault();
             });
 
             searchInput.addEventListener('blur', () => {
-                // Small timeout to allow click to register
                 setTimeout(() => {
                     resultsContainer.style.display = 'none';
                 }, 100);
@@ -436,6 +380,33 @@
                     search(searchInput.value);
                 }
             });
+            async function createConversation(){
+                const roomKey = crypto.getRandomValues(new Uint8Array(16));
+
+                const senderRes = await getMyPublicKey();
+                const receiverRes = await getPublicKey(selectedUserId);
+
+                const senderPublicKey = senderRes.public_key;
+                const receiverPublicKey = receiverRes.public_key;
+
+                const encryptedRoomKeyForSender = await encryptWithPublicKey(roomKey, senderPublicKey);
+
+                const encryptedRoomKeyForReceiver = await encryptWithPublicKey(roomKey, receiverPublicKey);
+
+                const response= await secureFetch(`/api/conversation/create-private-conversation`, {
+                    method: 'POST',
+                    body: {
+                        sender_id: myId,
+                        receiver_id: selectedUserId,
+                        encrypted_room_key_for_sender: encryptedRoomKeyForSender,
+                        encrypted_room_key_for_receiver: encryptedRoomKeyForReceiver,
+                    },
+                });
+                const conversation =await response;
+                const roomKeys= new Map();
+                roomKeys.set(conversation.id,encryptedRoomKeyForSender);
+                return conversation;
+            }
 
 
     </script>

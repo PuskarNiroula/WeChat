@@ -124,22 +124,31 @@
         localStorage.setItem('token', token);
 
         if (data.encryption?.needs_key_setup) {
-        console.log("Generating ECDH key pair...");
+        console.log("Generating RSA key pair...");
 
 
-        const keyPair = await crypto.subtle.generateKey(
-            {name: "ECDH", namedCurve: "P-256"},
-            true,
-            ["deriveKey"]
-        );
+            const keyPair = await crypto.subtle.generateKey(
+                {
+                    name: "RSA-OAEP",
+                    modulusLength: 2048,
+                    publicExponent: new Uint8Array([1, 0, 1]),
+                    hash: "SHA-256"
+                },
+                true,
+                ["encrypt", "decrypt"]
+            );
+
+            const spki = await crypto.subtle.exportKey("spki", keyPair.publicKey);
+
+            const publicKeyBase64 = btoa(
+                String.fromCharCode(...new Uint8Array(spki))
+            );
+            const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
+
+            localStorage.setItem(`private_key_${userId}`, JSON.stringify(privateKeyJwk));
 
 
-        const rawPublicKey = await crypto.subtle.exportKey("raw", keyPair.publicKey);
-        const publicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(rawPublicKey)));
-
-        const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
-        localStorage.setItem(`private_key_${userId}`, JSON.stringify(privateKeyJwk));
-        console.log("ECDH key pair generated and stored locally.");
+        console.log("RSA key pair generated and stored locally.");
 
         await fetch('/api/user/public-key', {
         method: 'POST',
