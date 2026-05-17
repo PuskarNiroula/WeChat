@@ -1,4 +1,3 @@
-{{-- resources/views/profile/edit.blade.php --}}
 @extends('Layouts.layout')
 
 @section('title', 'Edit Profile')
@@ -98,8 +97,8 @@
         $('#profileForm').submit(async function(e) {
             e.preventDefault();
 
-            const name = $('#name').val(); // Get name
-            const fileInputElement = $('#profile_picture')[0]; // File input
+            const name = $('#name').val();
+            const fileInputElement = $('#profile_picture')[0];
 
 
             const formData = new FormData();
@@ -111,7 +110,7 @@
             const response = await secureFetch('/updateProfile', {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json' // Do NOT set Content-Type manually
+                    'Accept': 'application/json'
                 },
                 body: formData
             });

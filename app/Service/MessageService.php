@@ -5,6 +5,7 @@ use App\Events\MessageSent;
 use App\Interface\LastMessageRepositoryInterface;
 use App\Interface\MessageRepositoryInterface;
 use App\Models\ConUser;
+use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -34,6 +35,7 @@ class MessageService {
             $this->lastMessageRepository->createLastMessage($messageDto['conversation_id'],$message->id);
         }
         DB::commit();
+        $avatar=User::find($messageDto['sender_id'])->avatar??"avatar.jpg";
         broadcast(
             new MessageSent(
                 $this->conversationUserService->getReceiverId($messageDto['conversation_id']),
@@ -45,41 +47,63 @@ class MessageService {
 
 
 
-        app(ChatCacheService::class)->pushMessage($messageDto['conversation_id'],$message['encrypted_message'],$messageDto['iv'],$messageDto['sender_id'],now());
+        app(ChatCacheService::class)->pushMessage($messageDto['conversation_id'],$message['encrypted_message'],$messageDto['iv'],$messageDto['sender_id'],now(),$avatar);
     }
-    public function getSidebar(){
-        $userId=auth()->id();
-            $conversationIds = $this->conversationUserService->getConversationIdOfUser(auth()->id());
-            $messages = $this->lastMessageRepository->getSidebar($conversationIds);
+    public function getSidebar()
+    {
+        $userId = auth()->id();
+
+        $conversationIds = $this->conversationUserService->getConversationIdOfUser($userId);
+        $messages = $this->lastMessageRepository->getSidebar($conversationIds);
+
+        $transformed = $messages->map(function ($item) use ($userId) {
+
+            $conversation = $item->message->conversation;
+
+            $isGroup = $conversation->type === 'group';
+
+            $chatName = null;
+            $avatar = null;
+            $memberId = null;
+
+            if ($isGroup) {
+
+                $chatName = $conversation->name ?? 'Group Chat';
 
 
-            $transformed = $messages->map(function ($item) use ($userId) {
-                $memberName = $memberId = null;
+                $avatar = $conversation->image ?? 'default_group_image.png';
 
-                foreach ($item->message->conversation->conUsers as $conv) {
+            } else {
+
+                foreach ($conversation->conUsers as $conv) {
                     if ($conv->user_id != $userId) {
                         $memberId = $conv->user->id;
-                        $memberName = $conv->user->name;
+                        $chatName = $conv->user->name;
                         $avatar = $conv->user->avatar;
                         break;
                     }
                 }
-                return [
-                    'conversation_id' => $item->conversation_id,
-                    'last_message' => $item->message->encrypted_message ?? null,
-                    'is_read' => $item->message->is_read,
-                    'last_message_time' => $item->message->updated_at ?? null,
-                    'last_message_sender' => $item->message->user->id == $userId ? 'Myself' : $item->message->user->name,
-                    'chat_member' => $memberName,
-                    'chat_member_id' => $memberId,
-                    'iv' => $item->message->iv,
-                    "avatar" => $avatar ?? "avatar.jpg",
-                ];
-            });
+            }
 
-            return $transformed->values();
+            return [
+                'conversation_id' => $item->conversation_id,
+                'is_group' => $isGroup,
 
+                'chat_name' => $chatName,
+                'chat_member_id' => $memberId,
 
+                'last_message' => $item->message->encrypted_message ?? null,
+                'is_read' => $item->message->is_read,
+                'last_message_time' => $item->message->updated_at ?? null,
+                'last_message_sender' =>
+                    $item->message->user->id == $userId ? 'Myself' : $item->message->user->name,
+
+                'iv' => $item->message->iv,
+                'avatar' => $avatar ?? "avatar.jpg",
+            ];
+        });
+
+        return $transformed->values();
     }
 
     /**
@@ -106,6 +130,7 @@ class MessageService {
                 'source'=>"database",
                 'sender_id' => $item->sender_id,
                 'message' => $item->encrypted_message,
+                'avatar'=>User::find($item->sender_id)->avatar??"avatar.jpg",
                 'iv'=>$item->iv,
                 'time'=>$item->created_at,
             ];
@@ -117,7 +142,8 @@ class MessageService {
                 $message['message'],
                 $message['iv'],
                 $message['sender_id'],
-                $message['time']
+                $message['time'],
+                $message['avatar']
             );
         }
         return $transformed->values()->toArray();

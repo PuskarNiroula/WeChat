@@ -1,5 +1,6 @@
 <?php
 namespace App\Repository;
+use App\Dto\ChatMember;
 use App\Interface\ConversationUserRepositoryInterface;
 use App\Models\ConUser;
 use App\Models\Conversation;
@@ -27,6 +28,18 @@ class ConversationUserRepository implements ConversationUserRepositoryInterface
                 'encrypted_room_key'=>$dto->encryptedKey
             ]);
         }
+    }
+    public function createGroupConversation($list,$conversationId):void{
+        /** @var ChatMember $dto */
+        foreach($list as $dto){
+            ConUser::create([
+                'user_id'=>$dto->getUserId(),
+                'conversation_id'=>$conversationId,
+                'encrypted_room_key'=>$dto->getEncryptedKey(),
+                'is_admin'=>$dto->isAdmin()
+            ]);
+        }
+
     }
 
     public function getReceiverId(int $conversationId): int

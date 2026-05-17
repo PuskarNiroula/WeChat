@@ -14,4 +14,13 @@ class ConversationRepository implements ConversationRepositoryInterface
         ]);
        return $conversation->id;
     }
+
+    public function createGroupConversation(string $name)
+    {
+        $conversation = Conversation::create([
+            'type' => 'group',
+            'name' => $name,
+        ]);
+        return $conversation->id;
+    }
 }

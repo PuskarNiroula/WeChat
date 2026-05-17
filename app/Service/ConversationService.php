@@ -1,7 +1,10 @@
 <?php
 namespace App\Service;
 
+use App\ApiResponseModel\GroupChatCreationApiResponseModel;
 use App\ApiResponseModel\PrivateConversationCreationApiResponseModel;
+use App\Dto\GroupChatCreateDto;
+use App\Enums\MessageTypeEnum;
 use App\Interface\ConversationRepositoryInterface;
 use App\Interface\ConversationUserRepositoryInterface;
 use App\Models\Conversation;
@@ -66,6 +69,50 @@ class ConversationService{
         $model->conversationId = $conversation ? $conversation->id : null;
         return $model;
 
+    }
+    public function createGroupChat(GroupChatCreateDto $dto):GroupChatCreationApiResponseModel{
+        Db::beginTransaction();
+        $conversationId=$this->createGroupConversation($dto->name);
+        $this->conversationUserRepository->createGroupConversation($dto->getMembers(),$conversationId,);
+        $messageDto=[];
+        $messageDto['conversation_id']=$conversationId;
+        $messageDto['message_tye']=MessageTypeEnum::TEXT;
+        $messageDto['sender_id']=auth()->id();
+        $messageDto['message']="Welcome to the group";
+        $messageDto['iv']="randomIv";
+        app(MessageService::class)->createMessage($messageDto);
+        Db::commit();
+
+        $response=new GroupChatCreationApiResponseModel();
+        $response->name=$dto->name;
+        $response->conversationId=$conversationId;
+        return $response;
+
+    }
+
+    public function updateConversation($conversationId, array $data)
+    {
+        $conversation = Conversation::findOrFail($conversationId);
+
+        $conversation->name = $data['name'];
+
+        if (!empty($data['image'])) {
+
+            $oldImage = $conversation->avatar;
+
+            if ($oldImage && file_exists(public_path('images/avatars/' . $oldImage))) {
+                unlink(public_path('images/avatars/' . $oldImage));
+            }
+
+            $conversation->image = $data['image'];
+        }
+
+        $conversation->save();
+
+        return $conversation;
+    }
+    private function createGroupConversation(string $name):int{
+        return $this->conversationRepository->createGroupConversation($name);
     }
 
 }
