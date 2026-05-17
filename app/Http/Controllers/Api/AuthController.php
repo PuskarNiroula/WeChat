@@ -182,7 +182,6 @@ class AuthController extends Controller
     {
         $request->validate([
             'public_key' => 'required|string',
-            // ❌ Remove private_key validation entirely
         ]);
 
         $user = $request->user();
@@ -193,7 +192,6 @@ class AuthController extends Controller
             ], 409);
         }
 
-        // Only store the public key
         $user->public_key = $request->input('public_key');
         $user->save();
 
@@ -201,11 +199,5 @@ class AuthController extends Controller
             'message' => 'Public key saved successfully'
         ]);
     }
-    public function getMyKey(): JsonResponse
-    {
-        $key=User::find(auth()->id())->private_key;
-        return response()->json(
-            $key
-        );
-    }
+
 }

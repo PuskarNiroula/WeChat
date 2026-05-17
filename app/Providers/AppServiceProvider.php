@@ -12,6 +12,7 @@ use App\Repository\ConversationUserRepository;
 use App\Repository\LastMessageRepository;
 use App\Repository\MessageRepository;
 use App\Repository\UserRepository;
+use App\Service\ConversationService;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,7 +28,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ConversationUserRepositoryInterface::class, ConversationUserRepository::class);
         $this->app->bind(LastMessageRepositoryInterface::class, LastMessageRepository::class);
         $this->app->bind(MessageRepositoryInterface::class, MessageRepository::class);
-
 
     }
 

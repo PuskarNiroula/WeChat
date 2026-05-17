@@ -1,46 +1,69 @@
 // Derive shared key between current user and another user
-async function getSharedKey(otherUserId) {
-    if (window._sharedKeyCache && window._sharedKeyCache[otherUserId]) {
-        return window._sharedKeyCache[otherUserId];
-    }
-    const userId=localStorage.getItem('user_id');
+// async function getSharedKey(otherUserId) {
+//     if (window._sharedKeyCache && window._sharedKeyCache[otherUserId]) {
+//         return window._sharedKeyCache[otherUserId];
+//     }
+//     const userId=localStorage.getItem('user_id');
+//
+//     const privateKeyJwk = JSON.parse(localStorage.getItem(`private_key_${userId}`));
+//     if (!privateKeyJwk) throw new Error('No private key found in localStorage');
+//
+//     const myPrivateKey = await crypto.subtle.importKey(
+//         'jwk',
+//         privateKeyJwk,
+//         { name: 'ECDH', namedCurve: 'P-256' },
+//         false,
+//         ['deriveKey']
+//     );
+//
+//     const res = await secureFetch(`/api/user/${otherUserId}/public-key`);
+//     const otherPublicKeyBase64 = res.public_key;
+//
+//     const otherPublicKey = await crypto.subtle.importKey(
+//         'raw',
+//         Uint8Array.from(atob(otherPublicKeyBase64), c => c.charCodeAt(0)),
+//         { name: 'ECDH', namedCurve: 'P-256' },
+//         false,
+//         []
+//     );
+//
+//     const sharedKey = await crypto.subtle.deriveKey(
+//         { name: 'ECDH', public: otherPublicKey },
+//         myPrivateKey,
+//         { name: 'AES-GCM', length: 256 },
+//         false,
+//         ['encrypt', 'decrypt']
+//     );
+//
+//     if (!window._sharedKeyCache) window._sharedKeyCache = {};
+//     window._sharedKeyCache[otherUserId] = sharedKey;
+//
+//     return sharedKey;
+// }
 
-    const privateKeyJwk = JSON.parse(localStorage.getItem(`private_key_${userId}`));
-    if (!privateKeyJwk) throw new Error('No private key found in localStorage');
 
-    const myPrivateKey = await crypto.subtle.importKey(
-        'jwk',
-        privateKeyJwk,
-        { name: 'ECDH', namedCurve: 'P-256' },
+async function getSharedKey(conversation) {
+
+    const userId = localStorage.getItem("user_id");
+
+    const res = await secureFetch(`/api/conversation/${conversation}/key`);
+
+    const encryptedKey = res.room_key;
+
+    const privateKey = await importPrivateKey(userId);
+
+    // 3. decrypt AES room key
+    const aesKeyBytes = await decryptRoomKey(encryptedKey, privateKey);
+
+    // 4. convert to CryptoKey (AES-GCM)
+    return await crypto.subtle.importKey(
+        "raw",
+        aesKeyBytes,
+        { name: "AES-GCM" },
         false,
-        ['deriveKey']
+        ["encrypt", "decrypt"]
     );
-
-    const res = await secureFetch(`/api/user/${otherUserId}/public-key`);
-    const otherPublicKeyBase64 = res.public_key;
-
-    const otherPublicKey = await crypto.subtle.importKey(
-        'raw',
-        Uint8Array.from(atob(otherPublicKeyBase64), c => c.charCodeAt(0)),
-        { name: 'ECDH', namedCurve: 'P-256' },
-        false,
-        []
-    );
-
-    const sharedKey = await crypto.subtle.deriveKey(
-        { name: 'ECDH', public: otherPublicKey },
-        myPrivateKey,
-        { name: 'AES-GCM', length: 256 },
-        false,
-        ['encrypt', 'decrypt']
-    );
-
-    if (!window._sharedKeyCache) window._sharedKeyCache = {};
-    window._sharedKeyCache[otherUserId] = sharedKey;
-
-    return sharedKey;
 }
-
 async function encryptMessage(message, sharedKey) {
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const encoded = new TextEncoder().encode(message);
@@ -105,7 +128,89 @@ async function sendEncryptedKeyToServer(receiverId, rawKey) {
         }
     });
 }
+async function getMyPublicKey() {
+    const userId=localStorage.getItem('user_id');
+    return await secureFetch(`/api/user/${userId}/public-key`);
+}
+async function getPublicKey(receiverId) {
+   return await secureFetch(`/api/user/${receiverId}/public-key`);
+}
+
+async function encryptWithPublicKey(roomKeyBytes, publicKeyBase64) {
+    const binaryDer = Uint8Array.from(
+        atob(publicKeyBase64),
+        c => c.charCodeAt(0)
+    );
+
+    const publicKey = await crypto.subtle.importKey(
+        "spki",
+        binaryDer,
+        {
+            name: "RSA-OAEP",
+            hash: "SHA-256"
+        },
+        false,
+        ["encrypt"]
+    );
+
+    const encrypted = await crypto.subtle.encrypt(
+        { name: "RSA-OAEP" },
+        publicKey,
+        roomKeyBytes
+    );
+
+    return arrayBufferToBase64(encrypted);
+}
+
+function arrayBufferToBase64(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const chunkSize = 0x8000; // avoid stack overflow
+
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+
+    return btoa(binary);
+}
+
+async function importPrivateKey(userId) {
+    const jwk = JSON.parse(localStorage.getItem(`private_key_${userId}`));
+
+    return await crypto.subtle.importKey(
+        "jwk",
+        jwk,
+        {
+            name: "RSA-OAEP",
+            hash: "SHA-256"
+        },
+        false,
+        ["decrypt"]
+    );
+}
+
+async function decryptRoomKey(encryptedRoomKeyBase64,privateKey) {
+
+
+    const encryptedBytes = Uint8Array.from(
+        atob(encryptedRoomKeyBase64),
+        c => c.charCodeAt(0)
+    );
+
+    const decrypted = await crypto.subtle.decrypt(
+        { name: "RSA-OAEP" },
+        privateKey,
+        encryptedBytes
+    );
+
+    return new Uint8Array(decrypted);
+}
+
 window.sendEncryptedKeyToServer = sendEncryptedKeyToServer;
 window.getSharedKey = getSharedKey;
 window.encryptMessage = encryptMessage;
 window.decryptMessage = decryptMessage;
+window.getMyPublicKey = getMyPublicKey;
+window.getPublicKey = getPublicKey;
+window.encryptWithPublicKey = encryptWithPublicKey;
+window.decryptRoomKey = decryptRoomKey;

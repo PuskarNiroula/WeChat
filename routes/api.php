@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\ExtraController;
 use App\Http\Controllers\Api\KeyController;
 use App\Http\Controllers\Api\MessageController;
@@ -23,7 +24,6 @@ Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'
 Route::middleware('auth:sanctum')->group(function () {
     Route::controller(AuthController::class)->group(function () {
         Route::post('/api/user/public-key', 'publicKey')->name('getPublicKey');
-        Route::get('/api/get-my-key', 'getMyKey')->name('getMyKey');
         Route::post('/api/logout', 'logout')->name('api.logout');
     });
 
@@ -32,7 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(MessageController::class)->group(function () {
         Route::get('/getMessages/{id}', 'getChunkMessages')->name('getMessages');
         Route::post('/sendMessage', 'sendMessage')->name('sendMessage');
-        Route::get("/openChat/{id}","createOrFindConversation")->name("openChat");
+//        Route::get("/openChat/{id}","createOrFindConversation")->name("openChat");
     });
 
     Route::controller(ExtraController::class)->group(function () {
@@ -41,6 +41,14 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::post('/updateProfile',[ProfileController::class,'updateProfile'])->name('updateProfile');
+
+    Route::controller(ConversationController::class)->group(function () {
+        Route::get('/api/conversation/{receiverId}/check','checkConversation')->name('checkConversation');
+        Route::post('/api/conversation/create-private-conversation','createPrivateConversation')->name('createPrivateConversation');
+        Route::get('/api/conversation/{conversationId}/key','getRoomKey')->name('getRoomKey');;
+    });
+
+
 });
 
 
