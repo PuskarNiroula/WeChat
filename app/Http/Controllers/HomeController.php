@@ -20,7 +20,11 @@ class HomeController extends Controller{
         $this->userService = $userService;
     }
 
-    public function gotoLoginPage():view{
+    public function gotoLoginPage()
+    {
+        if(Auth::check()){
+            return redirect()->route('dashboard');
+        }
         return view('Auth.login');
     }
 

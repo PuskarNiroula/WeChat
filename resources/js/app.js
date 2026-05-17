@@ -22,12 +22,10 @@ window.Echo = new Echo({
 
 window.Echo.channel('Test-Channel')
     .listen(".test-event", (e) => {
-        console.log('💬 Event received:',e.message);
     });
 
 window.Echo.private(`Message-Channel.${myId}`)
     .listen(".message-sent", (e) => {
-        console.log('received');
 
         if (String(e.receiver_id)===String(myId)){
             loadSidebar();

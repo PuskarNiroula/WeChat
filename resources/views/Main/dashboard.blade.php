@@ -256,10 +256,8 @@
 
             try {
                 const sharedKey = await getSharedKey(conId);
-                console.log("working tillhere");
 
                 const encrypted = await encryptMessage(message, sharedKey);
-                console.log("working here after encyrption");
 
                 await secureFetch(`/sendMessage`, {
                     method: 'POST',
@@ -289,13 +287,13 @@
                 });
 
                 let data = await response;
-                conId=data.conversationId;
 
                 if (!data || !data.conversationId) {
 
                     response = await createConversation(user_id);
                     data = await response;
                 }
+                conId=data.conversationId;
 
                 ChatUser.innerHTML = data.name;
 

@@ -1,6 +1,5 @@
 import "./chunk-BUSYA2B4.js";
 
-// node_modules/laravel-echo/dist/echo.js
 var u = class {
   constructor() {
     this.notificationCreatedEvent = ".Illuminate\\Notifications\\Events\\BroadcastNotificationCreated";
@@ -870,4 +869,3 @@ export {
   d as EventFormatter,
   E as default
 };
-//# sourceMappingURL=laravel-echo.js.map

@@ -83,10 +83,8 @@ class ConversationController extends Controller
            $conversation = $this->conversationService
                ->createPrivateConversation($conversationUserDtoList);
 
-           return response()->json([
-               'status' => 'success',
-               $conversation
-           ],201);
+           return response()->json(
+               $conversation);
        }catch (Exception $e){
            return response()->json([
                'status'=> "Failed to create conversation",

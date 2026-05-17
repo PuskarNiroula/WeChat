@@ -54,6 +54,10 @@ class ConversationService{
             })
             ->select('id')
             ->first();
+        if(!$conversation){
+            return null;
+        }
+
         $user=User::find($receiverId);
         $model = new PrivateConversationCreationApiResponseModel();
         $model->id = $user->id;
