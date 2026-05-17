@@ -6,7 +6,10 @@ function getToken() {
 // Secure fetch wrapper
 async function secureFetch(url, options = {}) {
     options = options || {};
-    options.headers = { ...(options.headers || {}) };
+    options.headers = {
+        ...(options.headers || {}),
+        'Accept': 'application/json'
+    };
 
     const token = getToken();
 

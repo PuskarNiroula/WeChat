@@ -10,7 +10,21 @@
         <div class="chat-sidebar bg-white border-end d-flex flex-column" style="width: 350px; overflow-y: auto;">
             <div class="sidebar-header d-flex align-items-center justify-content-between p-3 border-bottom">
                 <h5 class="mb-0 text-success fw-bold">We Chat</h5>
-                <i class="bi bi-three-dots-vertical fs-4 text-secondary"></i>
+                <div class="dropdown">
+                    <i class="bi bi-three-dots-vertical fs-4 text-secondary"
+                       role="button"
+                       data-bs-toggle="dropdown"
+                       aria-expanded="false"
+                       style="cursor:pointer;"></i>
+
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="/group-chat/create">
+                                Create Group Chat
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <div class="p-3 position-relative">
@@ -49,16 +63,11 @@
             <img id="logo-image" src="{{asset('/images/logo.png')}}" alt="">
         </div>
     </div>
-    @vite('resources/js/app.js')
 
 @endsection
 
 
 @section('scripts')
-
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         let selectedUserId=null;
@@ -330,7 +339,6 @@
                         method: 'GET'
                     });
 
-                    // Clear previous results
                     resultsContainer.innerHTML = '';
 
                     if (results.length === 0) {
@@ -338,7 +346,6 @@
                         return;
                     }
 
-                    // Populate results
                     results.forEach(({id, name}) => {
                         const div = document.createElement('div');
                         div.textContent = name;

@@ -1,46 +1,3 @@
-// Derive shared key between current user and another user
-// async function getSharedKey(otherUserId) {
-//     if (window._sharedKeyCache && window._sharedKeyCache[otherUserId]) {
-//         return window._sharedKeyCache[otherUserId];
-//     }
-//     const userId=localStorage.getItem('user_id');
-//
-//     const privateKeyJwk = JSON.parse(localStorage.getItem(`private_key_${userId}`));
-//     if (!privateKeyJwk) throw new Error('No private key found in localStorage');
-//
-//     const myPrivateKey = await crypto.subtle.importKey(
-//         'jwk',
-//         privateKeyJwk,
-//         { name: 'ECDH', namedCurve: 'P-256' },
-//         false,
-//         ['deriveKey']
-//     );
-//
-//     const res = await secureFetch(`/api/user/${otherUserId}/public-key`);
-//     const otherPublicKeyBase64 = res.public_key;
-//
-//     const otherPublicKey = await crypto.subtle.importKey(
-//         'raw',
-//         Uint8Array.from(atob(otherPublicKeyBase64), c => c.charCodeAt(0)),
-//         { name: 'ECDH', namedCurve: 'P-256' },
-//         false,
-//         []
-//     );
-//
-//     const sharedKey = await crypto.subtle.deriveKey(
-//         { name: 'ECDH', public: otherPublicKey },
-//         myPrivateKey,
-//         { name: 'AES-GCM', length: 256 },
-//         false,
-//         ['encrypt', 'decrypt']
-//     );
-//
-//     if (!window._sharedKeyCache) window._sharedKeyCache = {};
-//     window._sharedKeyCache[otherUserId] = sharedKey;
-//
-//     return sharedKey;
-// }
-
 
 async function getSharedKey(conversation) {
 
@@ -52,10 +9,8 @@ async function getSharedKey(conversation) {
 
     const privateKey = await importPrivateKey(userId);
 
-    // 3. decrypt AES room key
     const aesKeyBytes = await decryptRoomKey(encryptedKey, privateKey);
 
-    // 4. convert to CryptoKey (AES-GCM)
     return await crypto.subtle.importKey(
         "raw",
         aesKeyBytes,

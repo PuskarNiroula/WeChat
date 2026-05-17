@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GroupChatController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\VerificationController;
@@ -27,5 +28,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(HomeController::class)->group(function () {
         Route::get("/dashboard","dashboard")->name("dashboard");
         Route::get('/profile','profile')->name('profile');
+    });
+
+    Route::controller(GroupChatController::class)->group(function () {
+        Route::get('/group-chat/create','index')->name('groupChat.create');
     });
 });

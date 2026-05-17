@@ -24,14 +24,18 @@ window.Echo.channel('Test-Channel')
     .listen(".test-event", (e) => {
     });
 
-window.Echo.private(`Message-Channel.${myId}`)
-    .listen(".message-sent", (e) => {
+if (typeof myId !== "undefined") {
+    console.log("wtf");
 
-        if (String(e.receiver_id)===String(myId)){
-            loadSidebar();
-            if(e.conversation_id===conId){
-                loadMessages(conId);
+    window.Echo.private(`Message-Channel.${myId}`)
+        .listen(".message-sent", (e) => {
+
+            if (String(e.receiver_id) === String(myId)) {
+                loadSidebar();
+                if (e.conversation_id === conId) {
+                    loadMessages(conId);
+                }
             }
-        }
 
-    });
+        });
+}

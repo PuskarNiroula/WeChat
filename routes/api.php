@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\ExtraController;
+use App\Http\Controllers\Api\GroupChatApiController;
 use App\Http\Controllers\Api\KeyController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\ProfileController;
@@ -32,7 +33,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(MessageController::class)->group(function () {
         Route::get('/getMessages/{id}', 'getChunkMessages')->name('getMessages');
         Route::post('/sendMessage', 'sendMessage')->name('sendMessage');
-//        Route::get("/openChat/{id}","createOrFindConversation")->name("openChat");
     });
 
     Route::controller(ExtraController::class)->group(function () {
@@ -46,6 +46,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/api/conversation/{receiverId}/check','checkConversation')->name('checkConversation');
         Route::post('/api/conversation/create-private-conversation','createPrivateConversation')->name('createPrivateConversation');
         Route::get('/api/conversation/{conversationId}/key','getRoomKey')->name('getRoomKey');;
+    });
+
+    Route::controller(GroupChatApiController::class)->group(function () {
+        Route::post('/api/group-chat/create','createGroupChat')->name('createGroupChat');
     });
 
 

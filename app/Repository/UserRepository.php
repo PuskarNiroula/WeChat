@@ -43,6 +43,7 @@ class UserRepository implements UserRepoInterface{
     public function searchUser(string $name)
     {
         $users = User::where('name', 'like', '%' . $name . '%')
+            ->where('id', '!=', auth()->id())
             ->limit(10)
             ->get(['id', 'name']);
 
