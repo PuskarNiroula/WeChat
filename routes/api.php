@@ -45,7 +45,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::controller(ConversationController::class)->group(function () {
         Route::get('/api/conversation/{receiverId}/check','checkConversation')->name('checkConversation');
         Route::post('/api/conversation/create-private-conversation','createPrivateConversation')->name('createPrivateConversation');
-        Route::get('/api/conversation/{conversationId}/key','getRoomKey')->name('getRoomKey');;
+        Route::get('/api/conversation/{conversationId}/key','getRoomKey')->name('getRoomKey');
+        Route::get('/api/conversation/{id}/meta','getConversationMeta')->name('getConversationMeta');
+        Route::post('/api/group/{conId}/update','updateConversation')->name('updateGroupChat');
     });
 
     Route::controller(GroupChatApiController::class)->group(function () {

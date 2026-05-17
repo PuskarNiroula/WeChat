@@ -5,6 +5,7 @@ use App\Events\MessageSent;
 use App\Interface\LastMessageRepositoryInterface;
 use App\Interface\MessageRepositoryInterface;
 use App\Models\ConUser;
+use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -34,6 +35,7 @@ class MessageService {
             $this->lastMessageRepository->createLastMessage($messageDto['conversation_id'],$message->id);
         }
         DB::commit();
+        $avatar=User::find($messageDto['sender_id'])->avatar??"avatar.jpg";
         broadcast(
             new MessageSent(
                 $this->conversationUserService->getReceiverId($messageDto['conversation_id']),
@@ -45,7 +47,7 @@ class MessageService {
 
 
 
-        app(ChatCacheService::class)->pushMessage($messageDto['conversation_id'],$message['encrypted_message'],$messageDto['iv'],$messageDto['sender_id'],now());
+        app(ChatCacheService::class)->pushMessage($messageDto['conversation_id'],$message['encrypted_message'],$messageDto['iv'],$messageDto['sender_id'],now(),$avatar);
     }
     public function getSidebar()
     {
@@ -69,7 +71,7 @@ class MessageService {
                 $chatName = $conversation->name ?? 'Group Chat';
 
 
-                $avatar = $conversation->avatar ?? 'group-avatar.jpg';
+                $avatar = $conversation->image ?? 'default_group_image.png';
 
             } else {
 
@@ -128,6 +130,7 @@ class MessageService {
                 'source'=>"database",
                 'sender_id' => $item->sender_id,
                 'message' => $item->encrypted_message,
+                'avatar'=>User::find($item->sender_id)->avatar??"avatar.jpg",
                 'iv'=>$item->iv,
                 'time'=>$item->created_at,
             ];
@@ -139,7 +142,8 @@ class MessageService {
                 $message['message'],
                 $message['iv'],
                 $message['sender_id'],
-                $message['time']
+                $message['time'],
+                $message['avatar']
             );
         }
         return $transformed->values()->toArray();

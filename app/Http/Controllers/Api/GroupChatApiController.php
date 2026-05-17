@@ -15,34 +15,35 @@ class GroupChatApiController extends Controller
 
     public function __construct()
     {
-        $this->conversationService=new ConversationService();
+        $this->conversationService = new ConversationService();
     }
 
-    public function createGroupChat(Request $request){
-   $request->validate([
-           'name'=>'required',
-           'userData'=>'required|array'
-       ]);
+    public function createGroupChat(Request $request)
+    {
+        $request->validate([
+            'name' => 'required',
+            'userData' => 'required|array'
+        ]);
 
-       $groupChat = new GroupChatCreateDto();
-       $groupChat->name=$request->name;
+        $groupChat = new GroupChatCreateDto();
+        $groupChat->name = $request->name;
 
-       $chatMembers = $request->userData;
-       foreach ($chatMembers as $userId=>$encryptedKey) {
-           $chatMember= new ChatMember();
-           $chatMember->setUserId($userId);
-           $chatMember->setEncryptedKey($encryptedKey);
-           if($userId==auth()->id()){
-               $chatMember->setAdmin();
-           }
-           $groupChat->addMember($chatMember);
-       }
-       try {
-           return response()->json($this->conversationService->createGroupChat($groupChat,auth()->id()));
-       }catch (Exception $exception){
-           return response()->json(['error' => $exception->getMessage()], 403);
-       }
+        $chatMembers = $request->userData;
+        foreach ($chatMembers as $userId => $encryptedKey) {
+            $chatMember = new ChatMember();
+            $chatMember->setUserId($userId);
+            $chatMember->setEncryptedKey($encryptedKey);
+            if ($userId == auth()->id()) {
+                $chatMember->setAdmin();
+            }
+            $groupChat->addMember($chatMember);
+        }
+        try {
+            return response()->json($this->conversationService->createGroupChat($groupChat, auth()->id()));
+        } catch (Exception $exception) {
+            return response()->json(['error' => $exception->getMessage()], 403);
+        }
 
-}
+    }
 
 }

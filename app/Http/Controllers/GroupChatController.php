@@ -10,5 +10,8 @@ class GroupChatController extends Controller
     public function Index():View{
         return view('Main.GroupChat');
     }
+    public function editGroupChat(int $groupChatId):View{
+        return view('Main.EditGroupChat',compact('groupChatId'));
+    }
 
 }

@@ -32,5 +32,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::controller(GroupChatController::class)->group(function () {
         Route::get('/group-chat/create','index')->name('groupChat.create');
+        Route::get('/group-chat/{id}/edit','editGroupChat')->name('groupChat.edit');
     });
 });

@@ -257,8 +257,8 @@ body, html {
 }
 #logo-image-div {
     position: relative;      /* centers relative to viewport */
-    top: 55%;
-    left: 40%;
+    top: 50%;
+    left: 530px;
     transform: translate(-50%, -50%);
     z-index: 1000;        /* stays above other content */
     text-align: center;
@@ -270,6 +270,86 @@ body, html {
     min-width: 100px;      /* optional minimum size */
     height: auto;          /* maintain aspect ratio */
 }
+#emojiPicker {
+    position: absolute;
+    bottom: 62px;
+    left: 12px;
+    width: 310px;
+    height: 350px;
+    background: #233138;
+    border: 1px solid #2a3942;
+    border-radius: 12px;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4);
+}
+
+#emojiSearch {
+    width: 100%;
+    background: #111b21;
+    border: none;
+    border-bottom: 1px solid #2a3942;
+    padding: 9px 14px;
+    color: #e9edef;
+    font-size: 13px;
+    outline: none;
+    flex-shrink: 0;
+}
+
+#emojiSearch::placeholder { color: #8696a0; }
+
+#emojiTabs {
+    display: flex;
+    padding: 4px 6px;
+    border-bottom: 1px solid #2a3942;
+    gap: 2px;
+    overflow-x: auto;
+    flex-shrink: 0;
+    scrollbar-width: none;
+}
+
+#emojiTabs::-webkit-scrollbar { display: none; }
+
+.emoji-tab {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px 7px;
+    border-radius: 6px;
+    font-size: 17px;
+    flex-shrink: 0;
+    transition: background .15s;
+}
+
+.emoji-tab:hover, .emoji-tab.active { background: #2a3942; }
+
+#emojiGrid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 1px;
+    padding: 6px;
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: #2a3942 transparent;
+}
+
+.emoji-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    padding: 4px;
+    border-radius: 6px;
+    transition: background .1s;
+    line-height: 1;
+    text-align: center;
+}
+
+.emoji-btn:hover { background: #2a3942; }
+
 
 /* Optional: for very small screens */
 @media (max-width: 576px) {

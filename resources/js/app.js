@@ -21,7 +21,7 @@ window.Echo = new Echo({
 
 
 window.Echo.channel('Test-Channel')
-    .listen(".test-event", (e) => {
+    .listen(".test-event", () => {
     });
 
 if (typeof myId !== "undefined") {

@@ -89,6 +89,28 @@ class ConversationService{
         return $response;
 
     }
+
+    public function updateConversation($conversationId, array $data)
+    {
+        $conversation = Conversation::findOrFail($conversationId);
+
+        $conversation->name = $data['name'];
+
+        if (!empty($data['image'])) {
+
+            $oldImage = $conversation->avatar;
+
+            if ($oldImage && file_exists(public_path('images/avatars/' . $oldImage))) {
+                unlink(public_path('images/avatars/' . $oldImage));
+            }
+
+            $conversation->image = $data['image'];
+        }
+
+        $conversation->save();
+
+        return $conversation;
+    }
     private function createGroupConversation(string $name):int{
         return $this->conversationRepository->createGroupConversation($name);
     }
