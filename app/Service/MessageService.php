@@ -5,6 +5,7 @@ use App\Events\MessageSent;
 use App\Interface\LastMessageRepositoryInterface;
 use App\Interface\MessageRepositoryInterface;
 use App\Models\ConUser;
+use App\Models\Conversation;
 use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -24,30 +25,27 @@ class MessageService {
     /**
      * @throws Exception
      */
-    public function createMessage(array $messageDto):void{
-        if(!$this->conversationUserService->checkValidConversation(auth()->id(),$messageDto['conversation_id']))
-            throw new Exception("Not your conversation");
+    public function createMessage(array $messageDto): void
+    {
+        $userId = auth()->id();
+        $conversationId = $messageDto['conversation_id'];
+
+        $this->ensureConversationAccess($userId, $conversationId);
+
         DB::beginTransaction();
-       $message= $this->messageRepository->createMessage($messageDto);
-        if($this->lastMessageRepository->checkIfLastMessageExist($messageDto['conversation_id'])){
-            $this->lastMessageRepository->updateLastMessage($messageDto['conversation_id'],$message->id);
-        }else{
-            $this->lastMessageRepository->createLastMessage($messageDto['conversation_id'],$message->id);
+
+        try {
+            $message = $this->storeMessage($messageDto);
+            $this->updateLastMessage($conversationId, $message->id);
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
         }
-        DB::commit();
-        $avatar=User::find($messageDto['sender_id'])->avatar??"avatar.jpg";
-        broadcast(
-            new MessageSent(
-                $this->conversationUserService->getReceiverId($messageDto['conversation_id']),
-                $messageDto['conversation_id'],
-                $messageDto['message'],
-                now()
-            )
-        )->toOthers();
 
-
-
-        app(ChatCacheService::class)->pushMessage($messageDto['conversation_id'],$message['encrypted_message'],$messageDto['iv'],$messageDto['sender_id'],now(),$avatar);
+        $this->broadcastMessage($messageDto, $message);
+        $this->cacheMessage($messageDto, $message);
     }
     public function getSidebar()
     {
@@ -149,4 +147,72 @@ class MessageService {
         return $transformed->values()->toArray();
     }
 
+    /**
+     * @throws Exception
+     */
+    private function ensureConversationAccess(int $userId, int $conversationId): void
+    {
+        if (!$this->conversationUserService->checkValidConversation($userId, $conversationId)) {
+            throw new Exception("Not your conversation");
+        }
+    }
+
+    private function storeMessage(array $messageDto)
+    {
+        return $this->messageRepository->createMessage($messageDto);
+    }
+    private function updateLastMessage(int $conversationId, int $messageId): void
+    {
+        if ($this->lastMessageRepository->checkIfLastMessageExist($conversationId)) {
+            $this->lastMessageRepository->updateLastMessage($conversationId, $messageId);
+            return;
+        }
+
+        $this->lastMessageRepository->createLastMessage($conversationId, $messageId);
+    }
+    private function broadcastMessage(array $messageDto, $message): void
+    {
+        $conversation = Conversation::with('conUsers')->find($messageDto['conversation_id']);
+        $senderId = $messageDto['sender_id'];
+
+        if ($conversation->type === 'group') {
+            $receiverIds = $conversation->conUsers->pluck('user_id');
+
+            foreach ($receiverIds as $receiverId) {
+                if ($receiverId == $senderId) continue;
+
+                broadcast(new MessageSent(
+                    $receiverId,
+                    $conversation->id,
+                    $messageDto['message'],
+                    now()
+                ))->toOthers();
+            }
+
+            return;
+        }
+
+        $receiverId = $this->conversationUserService
+            ->getReceiverId($conversation->id);
+
+        broadcast(new MessageSent(
+            $receiverId,
+            $conversation->id,
+            $messageDto['message'],
+            now()
+        ))->toOthers();
+    }
+    private function cacheMessage(array $messageDto, $message): void
+    {
+        $avatar = User::find($messageDto['sender_id'])->avatar ?? "avatar.jpg";
+
+        app(ChatCacheService::class)->pushMessage(
+            $messageDto['conversation_id'],
+            $message['encrypted_message'],
+            $messageDto['iv'],
+            $messageDto['sender_id'],
+            now(),
+            $avatar
+        );
+    }
 }

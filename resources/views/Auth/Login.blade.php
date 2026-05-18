@@ -91,95 +91,120 @@
 
 </div>
 <script>
-        let csrf = `{{ csrf_token() }}`;
+    const csrf = `{{ csrf_token() }}`;
 
-        document.getElementById('login-form').addEventListener('submit', async function (e) {
+    document.getElementById('login-form').addEventListener('submit', async function (e) {
         e.preventDefault();
 
-        const email = this.email.value;
-        const password = this.password.value;
-
         try {
-        const response = await fetch('/login', {
-        method: 'POST',
-        headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': csrf
-    },
-        body: JSON.stringify({ email, password })
-    });
+            const email = this.email.value;
+            const password = this.password.value;
 
-        const data = await response.json();
-
-        if (!response.ok) {
-        alert(data.message || 'Login failed!');
-        return;
-    }
-
-        const token = data.token;
-        const userId=data.user.id;
-
-        localStorage.setItem('user_id', userId);
-
-        localStorage.setItem('token', token);
-
-        if (data.encryption?.needs_key_setup) {
-        console.log("Generating RSA key pair...");
-
-
-            const keyPair = await crypto.subtle.generateKey(
-                {
-                    name: "RSA-OAEP",
-                    modulusLength: 2048,
-                    publicExponent: new Uint8Array([1, 0, 1]),
-                    hash: "SHA-256"
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf
                 },
-                true,
-                ["encrypt", "decrypt"]
-            );
+                body: JSON.stringify({ email, password })
+            });
 
-            const spki = await crypto.subtle.exportKey("spki", keyPair.publicKey);
+            const data = await response.json();
 
-            const publicKeyBase64 = btoa(
-                String.fromCharCode(...new Uint8Array(spki))
-            );
-            const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
+            if (!response.ok) {
+                throw new Error(data.message || 'Login failed');
+            }
 
-            localStorage.setItem(`private_key_${userId}`, JSON.stringify(privateKeyJwk));
+            const token = data.token;
+            const userId = data.user.id;
+
+            localStorage.setItem('user_id', userId);
+            localStorage.setItem('token', token);
+
+            if (data.encryption?.needs_key_setup) {
+                console.log("Encryption key setup required");
+
+                try {
+                    console.log("Generating RSA key pair...");
+
+                    const keyPair = await crypto.subtle.generateKey(
+                        {
+                            name: "RSA-OAEP",
+                            modulusLength: 2048,
+                            publicExponent: new Uint8Array([1, 0, 1]),
+                            hash: "SHA-256"
+                        },
+                        true,
+                        ["encrypt", "decrypt"]
+                    );
+
+                    const spki = await crypto.subtle.exportKey("spki", keyPair.publicKey);
+
+                    const publicKeyBase64 = btoa(
+                        String.fromCharCode(...new Uint8Array(spki))
+                    );
+
+                    const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
+
+                    localStorage.setItem(`private_key_${userId}`, JSON.stringify(privateKeyJwk));
+
+                    const keyResponse = await fetch('/api/user/public-key', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            public_key: publicKeyBase64
+                        })
+                    });
+
+                    if (!keyResponse.ok) {
+                        throw new Error("Failed to store public key");
+                    }
+
+                    console.log("Key setup complete");
+
+                } catch (keyErr) {
+                    console.error("Key setup failed:", keyErr);
+
+                    await secureFetch('/logout', {
+                        method: 'POST',
+                    });
 
 
-        console.log("RSA key pair generated and stored locally.");
+                    return;
+                }
 
-        await fetch('/api/user/public-key', {
-        method: 'POST',
-        headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-    },
-        body: JSON.stringify({
-        public_key: publicKeyBase64
-    })
-    });
+            } else {
+                const stored = localStorage.getItem(`private_key_${userId}`);
 
-        console.log("Public key stored on server, private key stored locally");
+                if (!stored) {
+                    await secureFetch('/logout', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrf
+                        }
+                    });
 
-    } else {
-        const stored = localStorage.getItem(`private_key_${userId}`);
 
-        if (!stored) {
-        alert("Private key not found on this device. You may need to reset your keys.");
-        return;
-    }
+                    alert("Private key missing. Login blocked.");
+                    return;
+                }
+            }
 
-        console.log("Private key found in localStorage.");
-    }
+            window.location.href = '/dashboard';
 
-        window.location.href = '/dashboard';
+        } catch (err) {
+            console.error("Login error:", err);
 
-    } catch (err) {
-        console.error("Login error:", err);
-        alert('An error occurred. Check console for details.');
-    }
+            await secureFetch('/logout', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrf
+                }
+            });
+        }
     });
 </script>
 </body>

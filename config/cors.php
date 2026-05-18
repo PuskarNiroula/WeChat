@@ -8,8 +8,6 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'http://192.168.137.203:5173',
-        'http://192.168.18.139:8000',
         '*'
     ],
 
