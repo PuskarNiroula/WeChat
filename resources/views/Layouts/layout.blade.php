@@ -199,7 +199,7 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="/js/jquery.js"></script>
 <script src="{{asset('/js/script.js')}}"></script>
 <script>
     const toggle = document.getElementById('settingsToggle');
