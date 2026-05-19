@@ -4,7 +4,6 @@ namespace App\Service;
 use App\Events\MessageSent;
 use App\Interface\LastMessageRepositoryInterface;
 use App\Interface\MessageRepositoryInterface;
-use App\Models\ConUser;
 use App\Models\Conversation;
 use App\Models\User;
 use Exception;
@@ -159,6 +158,7 @@ class MessageService {
 
     private function storeMessage(array $messageDto)
     {
+
         return $this->messageRepository->createMessage($messageDto);
     }
     private function updateLastMessage(int $conversationId, int $messageId): void
@@ -170,7 +170,7 @@ class MessageService {
 
         $this->lastMessageRepository->createLastMessage($conversationId, $messageId);
     }
-    private function broadcastMessage(array $messageDto, $message): void
+    private function broadcastMessage(array $messageDto): void
     {
         $conversation = Conversation::with('conUsers')->find($messageDto['conversation_id']);
         $senderId = $messageDto['sender_id'];
