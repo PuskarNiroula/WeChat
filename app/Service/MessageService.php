@@ -96,6 +96,7 @@ class MessageService {
                     $item->message->user->id == $userId ? 'Myself' : $item->message->user->name,
 
                 'iv' => $item->message->iv,
+                'key_version' => $item->message->key_version,
                 'avatar' => $avatar ?? "avatar.jpg",
             ];
         });
@@ -129,6 +130,7 @@ class MessageService {
                 'message' => $item->encrypted_message,
                 'avatar'=>User::find($item->sender_id)->avatar??"avatar.jpg",
                 'iv'=>$item->iv,
+                'key_version'=>$item->key_version,
                 'time'=>$item->created_at,
             ];
         });
@@ -140,6 +142,7 @@ class MessageService {
                 $message['iv'],
                 $message['sender_id'],
                 $message['time'],
+                $message['key_version'],
                 $message['avatar']
             );
         }
@@ -212,6 +215,7 @@ class MessageService {
             $messageDto['iv'],
             $messageDto['sender_id'],
             now(),
+            $messageDto['key_version'],
             $avatar
         );
     }

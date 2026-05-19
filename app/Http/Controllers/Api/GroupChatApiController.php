@@ -39,7 +39,7 @@ class GroupChatApiController extends Controller
             $groupChat->addMember($chatMember);
         }
         try {
-            return response()->json($this->conversationService->createGroupChat($groupChat, auth()->id()));
+            return response()->json($this->conversationService->createGroupChat($groupChat));
         } catch (Exception $exception) {
             return response()->json(['error' => $exception->getMessage()], 403);
         }

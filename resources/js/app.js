@@ -2,6 +2,7 @@ import Echo from 'laravel-echo';
 
 import Pusher from 'pusher-js';
 import './encryption.js';
+import './helper.js';
 window.Pusher = Pusher;
 
 let token =localStorage.getItem('token');
@@ -25,8 +26,6 @@ window.Echo.channel('Test-Channel')
     });
 
 if (typeof myId !== "undefined") {
-    console.log("wtf");
-
     window.Echo.private(`Message-Channel.${myId}`)
         .listen(".message-sent", (e) => {
 

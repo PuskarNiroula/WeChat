@@ -62,6 +62,16 @@
                                 </a>
                             </li>
                             <li>
+                                <a class="dropdown-item text-danger" href="#" onclick="gotoAddMemberPage()">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Add Members
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="#">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Remove Members
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item text-danger" href="#">
                                     <i class="bi bi-box-arrow-right me-2"></i>Leave Group
                                 </a>
@@ -161,7 +171,7 @@
 
             const textEl       = document.createElement('div');
             textEl.className   = 'msg-text' + (decryptFailed ? ' msg-decrypt-error' : '');
-            textEl.textContent = decryptFailed ? '🔒 Encrypted message' : text;
+            textEl.textContent = decryptFailed ? '' : text;
             bubble.appendChild(textEl);
 
             const meta     = document.createElement('div');
@@ -213,11 +223,10 @@
                     return;
                 }
 
-                const sharedKey = await getSharedKey(conId);
                 const decrypted = await Promise.all(
                     messages.slice().reverse().map(async (msg) => {
                         try {
-                            const text = await decryptMessage(msg.message, msg.iv, sharedKey);
+                            const text = await decryptMessage(msg.message,conId, msg.iv, msg.key_version);
                             return { ...msg, text, failed: false };
                         } catch {
                             return { ...msg, text: null, failed: true };
@@ -244,18 +253,24 @@
                     const showAvatar = msg.sender_id !== lastSender;
                     lastSender       = msg.sender_id;
 
-                    const bubble = buildBubble({
-                        text:         msg.text,
-                        time:         msg.time,
-                        isSent,
-                        avatar:       msg.avatar,
-                        senderName:   null,
-                        showAvatar,
-                        decryptFailed: msg.failed,
-                        isGroup:      meta.is_group,
-                    });
 
-                    chatMessages.appendChild(bubble);
+                      if(!msg.failed){
+                          const bubble = buildBubble({
+                              text:         msg.text,
+                              time:         msg.time,
+                              isSent,
+                              avatar:       msg.avatar,
+                              senderName:   null,
+                              showAvatar,
+                              decryptFailed: msg.failed,
+                              isGroup:      meta.is_group,
+                          });
+                          chatMessages.appendChild(bubble);
+                      }
+
+
+
+
                 }
 
                 chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -285,6 +300,7 @@
             try {
                 const sharedKey = await getSharedKey(conId);
                 const encrypted = await encryptMessage(message, sharedKey);
+                const keyVersion = await getLatestKey(conId);
 
                 await secureFetch('/sendMessage', {
                     method: 'POST',
@@ -292,6 +308,7 @@
                         conversation_id:   conId,
                         encrypted_message: encrypted.data,
                         iv:                encrypted.iv,
+                        key_version:       keyVersion,
                     }
                 });
 
@@ -313,14 +330,18 @@
                 chatList.innerHTML = '';
 
                 for (const user of users) {
-                    const sharedKey = await getSharedKey(user.conversation_id);
+
                     let preview     = '';
 
                     try {
                         if (user.last_message && user.iv) {
-                            preview = await decryptMessage(user.last_message, user.iv, sharedKey);
+                            preview = await decryptMessage(
+                                user.last_message,
+                                user.conversation_id,
+                                user.iv,
+                                user.key_version);
                         }
-                    } catch { preview = '🔒 Encrypted'; }
+                    } catch { preview = ''; }
 
                     const item = document.createElement('div');
                     item.className = 'chat-item' + (conId === user.conversation_id ? ' active' : '');
@@ -439,6 +460,9 @@
 
         function gotoGroupChatEditPage() {
             window.location.href = `/group-chat/${conId}/edit`;
+        }
+        function gotoAddMemberPage() {
+            window.location.href = `/group-chat/${conId}/add-members`;
         }
 
 

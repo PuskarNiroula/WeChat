@@ -191,5 +191,13 @@ class ConversationController extends Controller
         $version = Conversation::find($conversationId);
         return response()->json($version['latest_key_version']);
     }
+    public function getSharedKeyAccordingToVersion(int $conversationId,Request $request){
+        $keyVersion = $request->query('version');
+        $conversationUser = ConUser::where('conversation_id',$conversationId)
+            ->where('user_id',auth()->id())
+            ->where('key_version',$keyVersion)
+            ->first();
+        return response()->json($conversationUser['encrypted_room_key']);
+    }
 
 }

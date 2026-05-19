@@ -100,13 +100,7 @@
         const resultsContainer = document.getElementById('searchResults');
         const searchInput = document.getElementById('userSearch');
 
-        function debounce(fn, delay) {
-            let timer;
-            return function (...args) {
-                clearTimeout(timer);
-                timer = setTimeout(() => fn.apply(this, args), delay);
-            };
-        }
+
 
         async function searchUsers(query) {
             if (!query) {
@@ -143,25 +137,7 @@
             setTimeout(() => resultsContainer.style.display = 'none', 150);
         });
 
-        async function generateKeysForGroups() {
-            let myKey = await getMyPublicKey();
-            const roomKey = crypto.getRandomValues(new Uint8Array(16));
 
-            let userList = {};
-
-            userList[localStorage.getItem('user_id')] =
-                await encryptWithPublicKey(roomKey, myKey.public_key);
-
-            await Promise.all(
-                selectedUsers.map(async (user) => {
-                    let userKey = await window.getPublicKey(user.id);
-                    userList[user.id] =
-                        await encryptWithPublicKey(roomKey, userKey.public_key);
-                })
-            );
-
-            return userList;
-        }
 
         $('#groupChatForm').submit(async function(e) {
             e.preventDefault();
@@ -172,7 +148,7 @@
                 alert('Group name and at least one member required');
                 return;
             }
-            const keyData = await generateKeysForGroups();
+            const keyData = await generateKeysForGroups(selectedUsers);
 
             const response = await secureFetch('/api/group-chat/create', {
                 method: 'POST',
@@ -184,6 +160,7 @@
             const keyName = localStorage.getItem('user_id')+'-'+response.conversationId+'-'+response.latestKeyVersion;
 
             localStorage.setItem(keyName, keyData[localStorage.getItem('user_id')]);
+            window.location.href = `/dashboard`;
 
         });
     </script>

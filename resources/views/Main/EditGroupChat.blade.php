@@ -72,7 +72,7 @@
                 body: formData
             });
 
-            alert('Group updated successfully');
+            window.location.href = `/dashboard`;
         });
 
     </script>

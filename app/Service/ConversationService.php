@@ -82,6 +82,7 @@ class ConversationService{
         $messageDto['message_tye']=MessageTypeEnum::TEXT;
         $messageDto['sender_id']=auth()->id();
         $messageDto['message']="Welcome to the group";
+        $messageDto['key_version']=1;
         $messageDto['iv']="randomIv";
         app(MessageService::class)->createMessage($messageDto);
         Db::commit();

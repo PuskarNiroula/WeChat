@@ -36,6 +36,7 @@ public function sendMessage(Request $request): JsonResponse
         $conversation_id=$request->input('conversation_id');
         $message=$request->input('encrypted_message');
         $iv=$request->input('iv');
+        $key_version=(int)$request->input('key_version');
 
 
         $maxLength = 10000;
@@ -53,6 +54,7 @@ public function sendMessage(Request $request): JsonResponse
             'conversation_id'=>$conversation_id,
             'message'=>$message,
             'sender_id'=>Auth::id(),
+            'key_version'=>$key_version,
             'iv'=>$iv,
         ];
            try{
@@ -83,7 +85,7 @@ public function sendMessage(Request $request): JsonResponse
                'id'=>$conversation->user->id,
                'avatar'=>$conversation->user->avatar??"avatar.jpg",
            ]);
-       }catch (\Exception $e){
+       }catch (Exception $e){
             return response()->json([
                 'status'=> "Failed to create conversation",
                 'message'=> $e->getMessage(),
