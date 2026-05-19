@@ -1,11 +1,8 @@
 
-async function getSharedKey(conversation) {
+async function getSharedKey(conversationId) {
 
-    const userId = localStorage.getItem("user_id");
-
-    const res = await secureFetch(`/api/conversation/${conversation}/key`);
-
-    const encryptedKey = res.room_key;
+const encryptedKey=await getEncryptedRoomKey(conversationId);
+const userId=localStorage.getItem('user_id');
 
     const privateKey = await importPrivateKey(userId);
 
@@ -159,6 +156,35 @@ async function decryptRoomKey(encryptedRoomKeyBase64,privateKey) {
     );
 
     return new Uint8Array(decrypted);
+}
+
+async function getLatestKey(conversationId) {
+    return await secureFetch(`/api/conversation/${conversationId}/latest-key`);
+}
+async function getEncryptedRoomKey(conversationId) {
+    const userId = localStorage.getItem("user_id");
+
+    const key_version = await getLatestKey(conversationId); // ensure it's resolved
+
+    const keyName = `${userId}-${conversationId}-${key_version}`;
+
+    let encryptedKey = localStorage.getItem(keyName);
+
+    if (!encryptedKey) {
+        const res = await secureFetch(
+            `/api/conversation/${conversationId}/key?version=${key_version}`
+        );
+
+        encryptedKey = res.room_key;
+
+        if (encryptedKey) {
+            localStorage.setItem(keyName, encryptedKey);
+        } else {
+            throw new Error("Room key not found on server");
+        }
+    }
+
+    return encryptedKey;
 }
 
 window.sendEncryptedKeyToServer = sendEncryptedKeyToServer;

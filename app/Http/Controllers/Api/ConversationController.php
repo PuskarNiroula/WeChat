@@ -185,8 +185,11 @@ class ConversationController extends Controller
                'message'=> $e->getMessage(),
            ]);
        }
+    }
 
-
+    public function getLatestKey(int $conversationId){
+        $version = Conversation::find($conversationId);
+        return response()->json($version['latest_key_version']);
     }
 
 }

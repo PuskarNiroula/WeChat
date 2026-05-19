@@ -48,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/api/conversation/{conversationId}/key','getRoomKey')->name('getRoomKey');
         Route::get('/api/conversation/{id}/meta','getConversationMeta')->name('getConversationMeta');
         Route::post('/api/group/{conId}/update','updateConversation')->name('updateGroupChat');
+        Route::get('/api/conversation/{conId}/latest-key','getLatestKey')->name('getLatestKey');
     });
 
     Route::controller(GroupChatApiController::class)->group(function () {

@@ -172,15 +172,18 @@
                 alert('Group name and at least one member required');
                 return;
             }
+            const keyData = await generateKeysForGroups();
 
             const response = await secureFetch('/api/group-chat/create', {
                 method: 'POST',
                 body: {
                     name,
-                    userData: await generateKeysForGroups()
+                    userData: keyData,
                 }
             });
-            console.log(response);
+            const keyName = localStorage.getItem('user_id')+'-'+response.conversationId+'-'+response.latestKeyVersion;
+
+            localStorage.setItem(keyName, keyData[localStorage.getItem('user_id')]);
 
         });
     </script>

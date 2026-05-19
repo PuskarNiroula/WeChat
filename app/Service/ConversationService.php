@@ -28,7 +28,8 @@ class ConversationService{
 
           try{
               DB::beginTransaction();
-              $conversationId = $this->conversationRepository->createPrivateConversation();
+              $conversation = $this->conversationRepository->createPrivateConversation();
+              $conversationId=$conversation['id'];
               $this->conversationUserRepository->createPrivateConversation($list,$conversationId);
               DB::commit();
 
@@ -38,6 +39,7 @@ class ConversationService{
               $responseModel->id = $user->id;
               $responseModel->name = $user->name;
               $responseModel->avatar = $user->avatar;
+              $responseModel->latestKeyVersion = $conversation['latest_key_version'];
 
               return $responseModel;
           }catch (\Exception $e){
@@ -72,7 +74,8 @@ class ConversationService{
     }
     public function createGroupChat(GroupChatCreateDto $dto):GroupChatCreationApiResponseModel{
         Db::beginTransaction();
-        $conversationId=$this->createGroupConversation($dto->name);
+        $conversation=$this->createGroupConversation($dto->name);
+        $conversationId=$conversation['id'];
         $this->conversationUserRepository->createGroupConversation($dto->getMembers(),$conversationId,);
         $messageDto=[];
         $messageDto['conversation_id']=$conversationId;
@@ -86,6 +89,7 @@ class ConversationService{
         $response=new GroupChatCreationApiResponseModel();
         $response->name=$dto->name;
         $response->conversationId=$conversationId;
+        $response->latestKeyVersion=$conversation['latest_key_version'];
         return $response;
 
     }
@@ -111,7 +115,7 @@ class ConversationService{
 
         return $conversation;
     }
-    private function createGroupConversation(string $name):int{
+    private function createGroupConversation(string $name):Conversation{
         return $this->conversationRepository->createGroupConversation($name);
     }
 

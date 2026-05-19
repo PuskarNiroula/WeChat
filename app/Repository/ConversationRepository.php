@@ -7,20 +7,21 @@ use App\Models\Conversation;
 class ConversationRepository implements ConversationRepositoryInterface
 {
 
-    public function createPrivateConversation():int
+    public function createPrivateConversation():Conversation
     {
        $conversation= Conversation::create([
             'type'=>'private'
         ]);
-       return $conversation->id;
+       return $conversation;
     }
 
     public function createGroupConversation(string $name)
     {
         $conversation = Conversation::create([
             'type' => 'group',
+            'latest_key_version' => 1,
             'name' => $name,
         ]);
-        return $conversation->id;
+        return $conversation;
     }
 }
