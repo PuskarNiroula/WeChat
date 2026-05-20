@@ -56,4 +56,25 @@ class ConversationUserRepository implements ConversationUserRepositoryInterface
     {
       return ConUser::where('user_id',$userId)->where('conversation_id',$conversationId)->exists();
     }
+
+    /**
+     * @param int $conversationId
+     * @param ChatMember[] $member
+     * @param int $keyVersion
+     * @return void
+     */
+    public function addMemberToConversation(int $conversationId, array $member, int $keyVersion): void
+    {
+        DB::beginTransaction();
+        foreach ($member as $user){
+            ConUser::create([
+                'user_id'=>$user->getUserId(),
+                'conversation_id'=>$conversationId,
+                'encrypted_room_key'=>$user->getEncryptedKey(),
+                'key_version'=>$keyVersion,
+            ]);
+        }
+        DB::commit();
+
+    }
 }

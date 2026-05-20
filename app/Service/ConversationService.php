@@ -3,6 +3,7 @@ namespace App\Service;
 
 use App\ApiResponseModel\GroupChatCreationApiResponseModel;
 use App\ApiResponseModel\PrivateConversationCreationApiResponseModel;
+use App\Dto\ChatMember;
 use App\Dto\GroupChatCreateDto;
 use App\Enums\MessageTypeEnum;
 use App\Interface\ConversationRepositoryInterface;
@@ -11,6 +12,7 @@ use App\Models\Conversation;
 use App\Models\User;
 use App\Repository\ConversationRepository;
 use App\Repository\ConversationUserRepository;
+use Exception;
 use Illuminate\Support\Facades\DB;
 
 class ConversationService{
@@ -115,6 +117,26 @@ class ConversationService{
         $conversation->save();
 
         return $conversation;
+    }
+
+    /**
+     * @param ChatMember[] $members
+     * @return void
+     * @throws Exception
+     */
+    public function addGroupMembers(array $members,int $conversationId){
+        $conversation = Conversation::find($conversationId);
+        if(!$conversation){
+            throw new Exception("Conversation not found");
+        }
+        $latestKeyVersion=$conversation->latest_key_version + 1;
+        $conversation->latest_key_version=$latestKeyVersion;
+        $conversation->save();
+
+        foreach ($members as $member){
+            $this->conversationUserRepository->addMemberToConversation($conversationId,[$member],$latestKeyVersion);;
+        }
+
     }
     private function createGroupConversation(string $name):Conversation{
         return $this->conversationRepository->createGroupConversation($name);

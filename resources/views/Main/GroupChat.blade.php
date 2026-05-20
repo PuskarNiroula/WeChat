@@ -136,8 +136,10 @@
         searchInput.addEventListener('blur', () => {
             setTimeout(() => resultsContainer.style.display = 'none', 150);
         });
-
-
+        function debounce(fn, delay) {
+            let t;
+            return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+        }
 
         $('#groupChatForm').submit(async function(e) {
             e.preventDefault();
@@ -163,5 +165,6 @@
             window.location.href = `/dashboard`;
 
         });
+
     </script>
 @endsection

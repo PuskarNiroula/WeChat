@@ -53,6 +53,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::controller(GroupChatApiController::class)->group(function () {
         Route::post('/api/group-chat/create','createGroupChat')->name('createGroupChat');
+        Route::get('/api/group-chat/new-member/{name}/search','searchNewMember')->name('searchNewMember');
+        Route::get('/api/group-chat/{conversationId}/get-old-members','getGroupMembers')->name('getOldMembers');
+        Route::post('/api/group-chat/add-members','addNewMembers')->name('addNewMembers');
     });
 
 

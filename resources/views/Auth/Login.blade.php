@@ -180,11 +180,14 @@
                 const stored = localStorage.getItem(`private_key_${userId}`);
 
                 if (!stored) {
-                    await secureFetch('/logout', {
+                    console.log('trying to logout');
+                    await fetch('/logout', {
                         method: 'POST',
                         headers: {
-                            'X-CSRF-TOKEN': csrf
-                        }
+                            'X-CSRF-TOKEN': csrf,
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'same-origin'
                     });
 
 
@@ -198,11 +201,13 @@
         } catch (err) {
             console.error("Login error:", err);
 
-            await secureFetch('/logout', {
+            await fetch('/logout', {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': csrf
-                }
+                    'X-CSRF-TOKEN': csrf,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
             });
         }
     });

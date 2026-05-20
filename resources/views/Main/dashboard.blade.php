@@ -3,7 +3,6 @@
 @section('title', 'We Chat')
 
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('/css/custom.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 @endsection
@@ -298,9 +297,11 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
             try {
-                const sharedKey = await getSharedKey(conId);
-                const encrypted = await encryptMessage(message, sharedKey);
                 const keyVersion = await getLatestKey(conId);
+
+                const sharedKey = await getSharedKeyByVersion(conId, keyVersion);
+                const encrypted = await encryptMessage(message, sharedKey);
+
 
                 await secureFetch('/sendMessage', {
                     method: 'POST',

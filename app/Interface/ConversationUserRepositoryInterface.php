@@ -3,6 +3,8 @@
 namespace App\Interface;
 
 
+use App\Dto\ChatMember;
+
 interface ConversationUserRepositoryInterface
 {
     public function FindConversation(int $userId);
@@ -11,5 +13,6 @@ interface ConversationUserRepositoryInterface
 
     public function getConversationIdofUser(int $userId):array;
     public function checkValidUser(int $userId,int $conversationId):bool;
+    public function addMemberToConversation(int $conversationId, array $member, int $keyVersion):void;
 
 }

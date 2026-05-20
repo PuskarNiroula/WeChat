@@ -97,10 +97,14 @@ class ConversationController extends Controller
            ],500);
        }
     }
-    public function getRoomKey(int $conversationId)
+    public function getRoomKey(int $conversationId,Request $request)
     {
+        $request->validate([
+            'version' => 'required|integer'
+        ]);
         $user = ConUser::where('conversation_id', $conversationId)
             ->where('user_id', auth()->id())
+            ->where('key_version',$request->query('version'))
             ->first();
 
         if (!$user) {

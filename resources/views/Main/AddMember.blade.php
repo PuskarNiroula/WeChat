@@ -76,7 +76,7 @@
 
         const searchInput = document.getElementById('userSearch');
         const resultsContainer = document.getElementById('searchResults');
-
+        const groupId = "{{$groupChatId}}";
 
         function renderSelectedUsers() {
             const container = document.getElementById('selectedUsers');
@@ -85,26 +85,27 @@
             selectedUsers.forEach(user => {
                 const div = document.createElement('div');
                 div.className = 'selected-chip';
+
                 div.innerHTML = `
-            ${user.name}
-            <button onclick="removeUser(${user.id})">×</button>
-        `;
+                ${user.name}
+                <button onclick="removeUser(${user.userId})">×</button>
+            `;
+
                 container.appendChild(div);
             });
         }
 
         function addUser(user) {
-            if (!selectedUsers.find(u => u.id === user.id)) {
+            if (!selectedUsers.find(u => u.userId === user.userId)) {
                 selectedUsers.push(user);
                 renderSelectedUsers();
             }
         }
 
         function removeUser(id) {
-            selectedUsers = selectedUsers.filter(u => u.id !== id);
+            selectedUsers = selectedUsers.filter(u => u.userId !== id);
             renderSelectedUsers();
         }
-
 
         async function searchUsers(query) {
             if (!query) {
@@ -113,20 +114,26 @@
             }
 
             try {
-                const users = await secureFetch(`/search/${encodeURIComponent(query)}`);
+                const users = await secureFetch(
+                    `/api/group-chat/new-member/${groupId}/search?user=${encodeURIComponent(query)}`
+                );
 
                 resultsContainer.innerHTML = '';
 
                 if (!users || users.length === 0) {
                     resultsContainer.innerHTML = `
-                <div class="list-group-item text-muted">
-                    No users found
-                </div>`;
+                    <div class="list-group-item text-muted">
+                        No users found
+                    </div>`;
                 } else {
                     users.forEach(user => {
                         const div = document.createElement('div');
-                        div.className = 'list-group-item list-group-item-action';
-                        div.textContent = user.name;
+                        div.className = 'list-group-item list-group-item-action d-flex align-items-center gap-2';
+
+                        div.innerHTML = `
+                        <img src="${user.avatar}" width="30" height="30" style="border-radius:50%" alt="user image">
+                        <span>${user.name}</span>
+                    `;
 
                         div.onclick = () => {
                             addUser(user);
@@ -142,22 +149,25 @@
 
             } catch (err) {
                 console.error(err);
-                alert('Error searching users');
             }
         }
 
+        searchInput.addEventListener('input', debounce((e) => searchUsers(e.target.value), 500));
 
-        searchInput.addEventListener('input', debounce(e => {
-            searchUsers(e.target.value);
-        }, 300));
 
         searchInput.addEventListener('blur', () => {
             setTimeout(() => resultsContainer.style.display = 'none', 150);
         });
 
+        function debounce(fn, delay) {
+            let timer;
+            return function (...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
 
-
-        $('#addMemberForm').submit(async function(e) {
+        $('#addMemberForm').submit(async function (e) {
             e.preventDefault();
 
             if (selectedUsers.length < 1) {
@@ -165,18 +175,34 @@
                 return;
             }
 
-            const groupId = "{{ request()->route('id') ?? '' }}";
+            const groupId = "{{$groupChatId}}";
 
             try {
-                const response = await secureFetch('/api/group-chat/add-members', {
+
+                const oldMembers = await getOldMemberIds(groupId);
+
+                const allUsersMap = new Map();
+
+                selectedUsers.forEach(u => allUsersMap.set(String(u.userId), { id: u.userId }));
+                oldMembers.forEach(id => allUsersMap.set(String(id), { id }));
+
+                const allUsers = Array.from(allUsersMap.values());
+
+                const keyData = await generateKeysForGroups(allUsers);
+
+                await secureFetch('/api/group-chat/add-members', {
                     method: 'POST',
-                    body: {
-                        group_id: groupId,
-                        users: selectedUsers.map(u => u.id)
-                    }
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        conversationId: groupId,
+                        userData: keyData,
+                    })
                 });
 
                 alert('Members added successfully');
+
                 selectedUsers = [];
                 renderSelectedUsers();
                 searchInput.value = '';
@@ -186,5 +212,10 @@
                 alert('Failed to add members');
             }
         });
+
+        async function getOldMemberIds(conversationId) {
+            const response = await secureFetch(`/api/group-chat/${conversationId}/get-old-members`);
+            return response.map(member => member.userId);
+        }
     </script>
 @endsection

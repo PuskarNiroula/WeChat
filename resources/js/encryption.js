@@ -2,6 +2,7 @@
 async function getSharedKey(conversationId) {
 
 const encryptedKey=await getEncryptedRoomKey(conversationId);
+
 const userId=localStorage.getItem('user_id');
 
 
@@ -19,7 +20,9 @@ const userId=localStorage.getItem('user_id');
 }
 
 async function getSharedKeyByVersion(conversationId,keyVersion) {
+    console.log("Key version",keyVersion);
     const encryptedKey= await getEncryptedRoomKeyByVersion(conversationId, keyVersion);
+    console.log("Encrypted key",encryptedKey);
     const userId=localStorage.getItem('user_id');
 
     const privateKey = await importPrivateKey(userId);
@@ -186,18 +189,21 @@ async function getEncryptedRoomKey(conversationId) {
 
     const key_version = await getLatestKey(conversationId);
 
+
     const keyName = `${userId}-${conversationId}-${key_version}`;
 
-
     let encryptedKey = localStorage.getItem(keyName);
+    console.log("Key version",keyName);
+    console.log("Key version",encryptedKey);
 
 
     if (!encryptedKey) {
+        console.log("Fetching room key from server");
        const response = await secureFetch(
             `/api/conversation/${conversationId}/key?version=${key_version}`
         );
        encryptedKey=response.room_key;
-
+        console.log(response.room_key);
 
 
         if (encryptedKey) {
@@ -214,11 +220,15 @@ async function getEncryptedRoomKeyByVersion(conversationId,keyVersion) {
     const userId = localStorage.getItem("user_id");
     const keyName = `${userId}-${conversationId}-${keyVersion}`;
     let encryptedKey = localStorage.getItem(keyName);
+
     if(encryptedKey){
         return encryptedKey;
     }
+
     const response= await secureFetch(`/api/conversation/${conversationId}/key?version=${keyVersion}`);
-    localStorage.setItem(keyName,response);
+    localStorage.setItem(keyName,response.room_key);
+    return response.room_key;
+
 }
 
 window.sendEncryptedKeyToServer = sendEncryptedKeyToServer;
