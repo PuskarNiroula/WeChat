@@ -394,7 +394,7 @@
                     const div = document.createElement('div');
                     div.className = 'search-item';
                     div.innerHTML = `
-                    <img src="${avatarUrl(avatar)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+                    <img src="${avatarUrl(avatar)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" alt="user Image">
                     <span>${name}</span>`;
                     div.addEventListener('click', () => {
                         resultsContainer.style.display = 'none';

@@ -76,7 +76,7 @@ class MessageService {
                     if ($conv->user_id != $userId) {
                         $memberId = $conv->user->id;
                         $chatName = $conv->user->name;
-                        $avatar = $conv->user->avatar;
+                        $avatar = $conv->user->avatar??"avatar.jpg";
                         break;
                     }
                 }
