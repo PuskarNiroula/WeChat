@@ -2078,7 +2078,7 @@ var require_pusher = __commonJS({
                       return;
                     }
                     this.emit(event, this.getDataToEmit(bytes));
-                    return;
+
                   });
                   return;
                 }

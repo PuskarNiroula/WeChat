@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Exception\UserNotFoundException;
 use App\Interface\UserRepoInterface;
 use App\Models\User;
+use Exception;
 
 
 class UserService{
@@ -17,12 +18,12 @@ class UserService{
 
     public function createUser(array $data){
      if($this->userRepo->emailExists($data['email'])){
-         throw new \Exception('Email already exists');
+         throw new Exception('Email already exists');
      }
 
      $user=$this->userRepo->createUsers($data);
    if($user==null)
-       throw new \Exception('Error creating user');
+       throw new Exception('Error creating user');
     $user->sendEmailVerificationNotification();
    return $user;
     }
@@ -37,7 +38,7 @@ class UserService{
             $extension = $file->getClientOriginalExtension();
 
             if (!in_array(strtolower($extension), ['jpeg','jpg','png','gif','svg','webp'])) {
-                throw new \Exception('Invalid file type');
+                throw new Exception('Invalid file type');
             }
 
             $filename = uniqid() . '_' . time() . '.' . $extension;

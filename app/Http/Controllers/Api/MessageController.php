@@ -27,7 +27,7 @@ class MessageController extends Controller
             try{
                 $messages=$this->messageService->getPaginatedMessages($conversation_id);
                 return response()->json($messages);
-            }catch (\Exception $exception){
+            }catch (Exception $exception){
             return response()->json(['error' => $exception->getMessage()], 403);
             }
     }
