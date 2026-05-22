@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Repository;
-use App\Exception\UserNotFoundException;
 use App\Interface\UserRepoInterface;
 use App\Models\User;
 

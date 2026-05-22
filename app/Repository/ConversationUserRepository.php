@@ -1,9 +1,10 @@
 <?php
 namespace App\Repository;
 use App\Dto\ChatMember;
+use App\Enums\ConversationUserStatus;
 use App\Interface\ConversationUserRepositoryInterface;
 use App\Models\ConUser;
-use App\Models\Conversation;
+use Exception;
 use Illuminate\Support\Facades\DB;
 
 class ConversationUserRepository implements ConversationUserRepositoryInterface
@@ -47,7 +48,7 @@ class ConversationUserRepository implements ConversationUserRepositoryInterface
         return ConUser::where('conversation_id',$conversationId)->where('user_id','!=',auth()->id())->pluck('user_id')->first();
     }
 
-    public function getConversationIdofUser(int $userId): array
+    public function getConversationIdOfUser(int $userId): array
     {
         return ConUser::where('user_id',$userId)->pluck('conversation_id')->toArray();
     }
@@ -75,6 +76,49 @@ class ConversationUserRepository implements ConversationUserRepositoryInterface
             ]);
         }
         DB::commit();
+
+    }
+    /**
+     * @throws Exception
+     */
+    public function deactivateMemberId(int $userId, int $groupId):void
+    {
+        DB::beginTransaction();
+        try{
+            $userWithAllKeysHeHave=ConUser::where('conversation_id',$groupId)
+                ->where('user_id',$userId);
+            if(!$userWithAllKeysHeHave->exists())
+                return;
+            $userWithAllKeysHeHave=$userWithAllKeysHeHave->get();
+            foreach($userWithAllKeysHeHave as $user){
+                $user->status=ConversationUserStatus::INACTIVE;
+                $user->save();
+            }
+            DB::commit();
+        }catch (Exception $e){
+            DB::rollBack();
+            throw $e;
+        }
+
+    }
+    public function activateMemberId(int $userId, int $groupId):void
+    {
+        DB::beginTransaction();
+        try{
+            $userWithAllKeysHeHave=ConUser::where('conversation_id',$groupId)
+                ->where('user_id',$userId);
+            if(!$userWithAllKeysHeHave->exists())
+                return;
+            $userWithAllKeysHeHave=$userWithAllKeysHeHave->get();
+            foreach($userWithAllKeysHeHave as $user){
+                $user->status=ConversationUserStatus::ACTIVE;
+                $user->save();
+            }
+            DB::commit();
+        }catch (Exception $e){
+            DB::rollBack();
+            throw $e;
+        }
 
     }
 }

@@ -24,7 +24,7 @@ class ProfileController extends Controller
     {
         $valid = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:120', 'regex:/^[\p{L}\p{N}\p{Zs}\p{P}\p{S}]+$/u'],
-            'avatar' => 'file|mimes:jpeg,png,jpg,gif,svg,webp|max:1024'
+            'avatar' => 'file|mimes:jpeg,png,jpg,gif,svg,webp|max:14000'
         ]);
 
         if ($valid->fails()) {

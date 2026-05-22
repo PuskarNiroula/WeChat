@@ -134,10 +134,18 @@ class ConversationService{
         $conversation->save();
 
         foreach ($members as $member){
-            $this->conversationUserRepository->addMemberToConversation($conversationId,[$member],$latestKeyVersion);;
+            $this->conversationUserRepository->addMemberToConversation($conversationId,[$member],$latestKeyVersion);
+            $this->conversationUserRepository->activateMemberId($conversationId,$member->getUserId());
         }
 
     }
+
+    public function removeGroupMembers(array $memberIds,$conversationId):void{
+        foreach ($memberIds as $memberId){
+            $this->conversationRepository->deactivateMemberId($memberId,$conversationId);
+        }
+    }
+
     private function createGroupConversation(string $name):Conversation{
         return $this->conversationRepository->createGroupConversation($name);
     }

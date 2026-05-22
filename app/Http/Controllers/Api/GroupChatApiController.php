@@ -131,5 +131,35 @@ class GroupChatApiController extends Controller
 
 
     }
+    public function removeMembers(Request $request){
+        $request->validate([
+            'userData' => 'required|array',
+            'conversationId' => 'required|integer',
+            'removedUserIds'=>'required|array'
+        ]);
+
+
+        $chatMembers = $request->userData;
+        $membersToRemove=$request->removedUserIds;
+        $listOfMembers=[];
+        foreach ($chatMembers as $userId => $encryptedKey) {
+            $chatMember = new ChatMember();
+            $chatMember->setUserId($userId);
+            $chatMember->setEncryptedKey($encryptedKey);
+            $listOfMembers[]=$chatMember;
+        }
+        try {
+           $this->conversationService->addGroupMembers($listOfMembers,$request->conversationId);
+           $this->conversationService->removeGroupMembers($membersToRemove,$request->conversationId);
+           return response()->json([
+               'status' => 'success',
+               'message' => 'Members added successfully'
+           ],200);
+        } catch (Exception $exception) {
+            return response()->json(['error' => $exception->getMessage()], 403);
+        }
+
+
+    }
 
 }

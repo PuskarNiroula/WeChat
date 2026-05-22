@@ -54,27 +54,39 @@
                         <i class="bi bi-three-dots-vertical icon-btn"
                            role="button"
                            data-bs-toggle="dropdown"></i>
+
                         <ul class="dropdown-menu dropdown-menu-end">
+
                             <li>
                                 <a class="dropdown-item" href="#" onclick="gotoGroupChatEditPage()">
                                     <i class="bi bi-pencil me-2"></i>Edit Group
                                 </a>
                             </li>
+
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="gotoGroupDetailsPage()">
+                                    <i class="bi bi-info-circle me-2"></i>View Group Details
+                                </a>
+                            </li>
+
                             <li>
                                 <a class="dropdown-item text-danger" href="#" onclick="gotoAddMemberPage()">
-                                    <i class="bi bi-box-arrow-right me-2"></i>Add Members
+                                    <i class="bi bi-person-plus me-2"></i>Add Members
                                 </a>
                             </li>
+
                             <li>
-                                <a class="dropdown-item text-danger" href="#">
-                                    <i class="bi bi-box-arrow-right me-2"></i>Remove Members
+                                <a class="dropdown-item text-danger" href="#" onclick="gotoRemoveMembers()">
+                                    <i class="bi bi-person-dash me-2"></i>Remove Members
                                 </a>
                             </li>
+
                             <li>
                                 <a class="dropdown-item text-danger" href="#">
                                     <i class="bi bi-box-arrow-right me-2"></i>Leave Group
                                 </a>
                             </li>
+
                         </ul>
                     </div>
                 </div>
@@ -275,7 +287,7 @@
                 chatMessages.scrollTop = chatMessages.scrollHeight;
 
             } catch (err) {
-                console.error('loadMessages error:', err);
+
             }
         }
 
@@ -315,7 +327,6 @@
 
                 loadSidebar();
             } catch (err) {
-                console.error('sendMessage error:', err);
                 tempBubble.querySelector('.msg-text').classList.add('msg-decrypt-error');
                 tempBubble.querySelector('.msg-text').textContent = '⚠ Failed to send';
             }
@@ -371,7 +382,6 @@
                     chatList.appendChild(item);
                 }
             } catch (err) {
-                console.error('loadSidebar error:', err);
             }
         }
 
@@ -404,7 +414,6 @@
                     resultsContainer.appendChild(div);
                 });
             } catch (err) {
-                console.error('search error:', err);
             }
         }
 
@@ -432,7 +441,6 @@
 
                 loadMessages(conId);
             } catch (err) {
-                console.error('createOrOpenChat error:', err);
             }
         }
 
@@ -465,6 +473,13 @@
         function gotoAddMemberPage() {
             window.location.href = `/group-chat/${conId}/add-members`;
         }
+        function gotoGroupDetailsPage() {
+            window.location.href = `/group-chat/${conId}/details`;
+        }
+        function gotoRemoveMembers(){
+            window.location.href = `/group-chat/${conId}/remove-members`;
+        }
+
 
 
         document.addEventListener('DOMContentLoaded', () => {

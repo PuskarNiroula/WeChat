@@ -24,10 +24,10 @@ async function secureFetch(url, options = {}) {
 
     const response = await fetch(url, options);
 
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Request failed');
-    }
+        if (response.status === 404) {
+          return null;
+        }
+
 
     return response.json();
 }
