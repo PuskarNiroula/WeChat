@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -37,7 +38,7 @@ if(!$user)
                 'status' => 'success',
                 'message' => 'Reset link sent'
             ]);
-        }catch (\Exception $e){
+        }catch (Exception $e){
             return response()->json([
                 'status'=> "Failed to send reset link",
                 'message'=> $e->getMessage(),

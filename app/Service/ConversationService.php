@@ -44,7 +44,7 @@ class ConversationService{
               $responseModel->latestKeyVersion = $conversation['latest_key_version'];
 
               return $responseModel;
-          }catch (\Exception $e){
+          }catch (Exception $e){
               DB::rollBack();
               throw $e;
           }

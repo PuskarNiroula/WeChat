@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Service\UserService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -72,7 +73,7 @@ class HomeController extends Controller{
               'token' => $token,
               'encryption' => $encryptionStatus,
           ]);
-      }catch (\Exception $e){
+      }catch (Exception $e){
           return response()->json([
               'status'=> "Failed to login",
               'message'=> $e->getMessage()
@@ -109,7 +110,7 @@ class HomeController extends Controller{
                 'user' => $user,
                 'message' => 'Please verify your email address to login'
             ], 201);
-        }catch (\Exception $e){
+        }catch (Exception $e){
             return response()->json([
                 'status'=> "Failed to register",
                 'message'=> $e->getMessage()

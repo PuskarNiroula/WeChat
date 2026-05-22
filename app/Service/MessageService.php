@@ -8,6 +8,7 @@ use App\Models\Conversation;
 use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class MessageService {
     protected MessageRepositoryInterface $messageRepository;
@@ -38,7 +39,7 @@ class MessageService {
             $this->updateLastMessage($conversationId, $message->id);
 
             DB::commit();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             DB::rollBack();
             throw $e;
         }
