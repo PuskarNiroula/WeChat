@@ -26,10 +26,13 @@ class ConversationService{
         $this->conversationUserRepository=new ConversationUserRepository();
     }
 
+    /**
+     * @throws Exception
+     */
     public function createPrivateConversation($list):PrivateConversationCreationApiResponseModel{
 
+        DB::beginTransaction();
           try{
-              DB::beginTransaction();
               $conversation = $this->conversationRepository->createPrivateConversation();
               $conversationId=$conversation['id'];
               $this->conversationUserRepository->createPrivateConversation($list,$conversationId);
@@ -41,7 +44,7 @@ class ConversationService{
               $responseModel->id = $user->id;
               $responseModel->name = $user->name;
               $responseModel->avatar = $user->avatar;
-              $responseModel->latestKeyVersion = $conversation['latest_key_version'];
+              $responseModel->latestKeyVersion = $conversation?$conversation['latest_key_version']:1;
 
               return $responseModel;
           }catch (Exception $e){
@@ -131,18 +134,31 @@ class ConversationService{
         }
         $latestKeyVersion=$conversation->latest_key_version + 1;
         $conversation->latest_key_version=$latestKeyVersion;
-        $conversation->save();
-
-        foreach ($members as $member){
-            $this->conversationUserRepository->addMemberToConversation($conversationId,[$member],$latestKeyVersion);
-            $this->conversationUserRepository->activateMemberId($conversationId,$member->getUserId());
-        }
+       DB::beginTransaction();
+       try{
+           $conversation->save();
+           foreach ($members as $member){
+               $this->conversationUserRepository->addMemberToConversation($conversationId,[$member],$latestKeyVersion);
+               $this->conversationUserRepository->activateMember($member->getUserId(),$conversationId);
+           }
+           DB::commit();
+       }catch (Exception $e){
+           DB::rollBack();
+           throw $e;
+       }
 
     }
 
     public function removeGroupMembers(array $memberIds,$conversationId):void{
-        foreach ($memberIds as $memberId){
-            $this->conversationRepository->deactivateMemberId($memberId,$conversationId);
+        DB::beginTransaction();
+        try{
+            foreach ($memberIds as $memberId){
+                $this->conversationUserRepository->deactivateMember($memberId,$conversationId);
+            }
+            DB::commit();
+        }catch (Exception $e){
+            DB::rollBack();
+            throw $e;
         }
     }
 

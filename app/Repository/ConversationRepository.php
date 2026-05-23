@@ -10,7 +10,8 @@ class ConversationRepository implements ConversationRepositoryInterface
     public function createPrivateConversation():Conversation
     {
        $conversation= Conversation::create([
-            'type'=>'private'
+            'type'=>'private',
+           'latest_key_version'=>1,
         ]);
        return $conversation;
     }

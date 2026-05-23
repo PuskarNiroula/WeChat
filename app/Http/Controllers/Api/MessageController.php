@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
+use App\Service\ConversationChecker;
 use App\Service\ConversationUserService;
 use App\Service\MessageService;
 use Exception;
@@ -11,11 +12,13 @@ use Illuminate\Support\Facades\Auth;
 
 class MessageController extends Controller
 {
-    protected ConversationUserService $conversationUserService;
-    protected MessageService $messageService;
+    private ConversationUserService $conversationUserService;
+    private MessageService $messageService;
+    private ConversationChecker $conversationChecker;
     public function __construct()
     {
         $this->conversationUserService = new ConversationUserService();
+        $this->conversationChecker = new ConversationChecker();
         $this->messageService = new MessageService();
     }
 
@@ -24,6 +27,12 @@ class MessageController extends Controller
         if ($conversation_id == 0 || $conversation_id == null) {
             return response()->json(['error' => 'hello world'], 403);
         }
+        if(!$this->conversationChecker->IsUserInConversation($conversation_id,auth()->id())){
+            return response()->json([
+                'message'=>"You are not in this conversation"
+            ],401);
+        }
+
             try{
                 $messages=$this->messageService->getPaginatedMessages($conversation_id);
                 return response()->json($messages);
@@ -33,11 +42,17 @@ class MessageController extends Controller
     }
 public function sendMessage(Request $request): JsonResponse
 {
-        $conversation_id=$request->input('conversation_id');
-        $message=$request->input('encrypted_message');
-        $iv=$request->input('iv');
-        $key_version=(int)$request->input('key_version');
 
+    $conversation_id=$request->input('conversation_id');
+    $message=$request->input('encrypted_message');
+    $iv=$request->input('iv');
+    $key_version=(int)$request->input('key_version');
+
+    if(!$this->conversationChecker->IsUserInConversation($conversation_id,auth()->id())){
+        return response()->json([
+            'message'=>"You are not in this conversation"
+        ],401);
+    }
 
         $maxLength = 10000;
         if (empty($message) || !is_string($message) || trim($message) === '') {

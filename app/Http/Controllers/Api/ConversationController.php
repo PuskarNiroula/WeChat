@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ConUser;
 use App\Models\Conversation;
 use App\Models\User;
+use App\Service\ConversationChecker;
 use App\Service\ConversationService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -15,9 +16,11 @@ use Illuminate\Http\Request;
 class ConversationController extends Controller
 {
     private ConversationService $conversationService;
+    private ConversationChecker $conversationChecker;
     public function __construct()
     {
         $this->conversationService=new ConversationService();
+        $this->conversationChecker=new ConversationChecker();
     }
 
     public function checkConversation($receiverId):JsonResponse{
@@ -119,6 +122,12 @@ class ConversationController extends Controller
     }
     public function getConversationMeta(int $conversationId): JsonResponse
     {
+        if(!$this->conversationChecker->IsUserInConversation($conversationId,auth()->id())){
+            return response()->json([
+                'message'=>"You are not in this conversation"
+            ],401);
+        }
+
         $conversation = Conversation::findOrFail($conversationId);
 
         if ($conversation->type === 'group') {
@@ -146,6 +155,12 @@ class ConversationController extends Controller
 
     public function updateConversation(int $conversationId,Request $request): JsonResponse
     {
+        if(!$this->conversationChecker->IsUserInConversation($conversationId,auth()->id())){
+            return response()->json([
+                'message'=>"You are not in this conversation"
+            ],401);
+        }
+
         $request->validate([
             'name' => 'required|string',
             'image' => 'nullable|image'
@@ -192,10 +207,21 @@ class ConversationController extends Controller
     }
 
     public function getLatestKey(int $conversationId){
+        if(!$this->conversationChecker->IsUserInConversation($conversationId,auth()->id())){
+            return response()->json([
+                'message'=>"You are not in this conversation"
+            ],401);
+        }
+
         $version = Conversation::find($conversationId);
         return response()->json($version['latest_key_version']);
     }
     public function getSharedKeyAccordingToVersion(int $conversationId,Request $request){
+        if(!$this->conversationChecker->IsUserInConversation($conversationId,auth()->id())){
+            return response()->json([
+                'message'=>"You are not in this conversation"
+            ],401);
+        }
         $keyVersion = $request->query('version');
         $conversationUser = ConUser::where('conversation_id',$conversationId)
             ->where('user_id',auth()->id())

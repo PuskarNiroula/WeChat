@@ -8,6 +8,7 @@ use App\Dto\GroupChatCreateDto;
 use App\Http\Controllers\Controller;
 use App\Models\ConUser;
 use App\Models\User;
+use App\Service\ConversationChecker;
 use App\Service\ConversationService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -17,13 +18,15 @@ use function PHPSTORM_META\map;
 class GroupChatApiController extends Controller
 {
     private ConversationService $conversationService;
+    private ConversationChecker $conversationChecker;
 
     public function __construct()
     {
         $this->conversationService = new ConversationService();
+        $this->conversationChecker = new ConversationChecker();
     }
 
-    public function createGroupChat(Request $request)
+    public function createGroupChat(Request $request):jsonResponse
     {
         $request->validate([
             'name' => 'required',
@@ -53,6 +56,13 @@ class GroupChatApiController extends Controller
 
     public function getGroupMembers(int $groupId): JsonResponse
     {
+
+        if(!$this->conversationChecker->IsUserInConversation($groupId,auth()->id())){
+            return response()->json([
+                'message'=>"You are not Admin in this conversation"
+            ],401);
+        }
+
         $members = ConUser::where('conversation_id', $groupId)
             ->with('user')
             ->select('user_id')
@@ -72,6 +82,13 @@ class GroupChatApiController extends Controller
     }
 
     public function searchNewMember(int $groupId, Request $request):JsonResponse{
+
+        if(!$this->conversationChecker->IsUserInConversation($groupId,auth()->id())){
+            return response()->json([
+                'message'=>"You are not Admin in this conversation"
+            ],401);
+        }
+
         $request->validate([
             'user' => 'required|string'
         ]);
@@ -98,17 +115,18 @@ class GroupChatApiController extends Controller
         return response()->json($response);
     }
 
-    private function getGroupChatMemberIds(int $groupId){
-        return ConUser::where('conversation_id', $groupId)
-            ->with('user')
-            ->get()
-            ->unique('user_id');
-    }
-    public function addNewMembers(Request $request){
+    public function addNewMembers(Request $request):jsonResponse{
+
         $request->validate([
             'userData' => 'required|array',
             'conversationId' => 'required|integer'
         ]);
+
+        if(!$this->conversationChecker->IsUserInConversation($request->conversationId,auth()->id())){
+            return response()->json([
+                'message'=>"You are not Admin in this conversation"
+            ],401);
+        }
 
 
         $chatMembers = $request->userData;
@@ -131,35 +149,48 @@ class GroupChatApiController extends Controller
 
 
     }
-    public function removeMembers(Request $request){
+    public function removeMembers(Request $request):jsonResponse{
         $request->validate([
             'userData' => 'required|array',
             'conversationId' => 'required|integer',
             'removedUserIds'=>'required|array'
         ]);
 
+        if(!$this->conversationChecker->IsUserAdminInConversation($request->conversationId,auth()->id())){
+            return response()->json([
+                'message'=>"You are not Admin in this conversation"
+            ],401);
+        }
+
 
         $chatMembers = $request->userData;
         $membersToRemove=$request->removedUserIds;
         $listOfMembers=[];
+        try {
         foreach ($chatMembers as $userId => $encryptedKey) {
             $chatMember = new ChatMember();
             $chatMember->setUserId($userId);
             $chatMember->setEncryptedKey($encryptedKey);
             $listOfMembers[]=$chatMember;
         }
-        try {
+
            $this->conversationService->addGroupMembers($listOfMembers,$request->conversationId);
            $this->conversationService->removeGroupMembers($membersToRemove,$request->conversationId);
            return response()->json([
                'status' => 'success',
-               'message' => 'Members added successfully'
-           ],200);
+               'message' => 'Members Removed successfully'
+           ]);
         } catch (Exception $exception) {
             return response()->json(['error' => $exception->getMessage()], 403);
         }
 
 
+    }
+    private function getGroupChatMemberIds(int $groupId){
+        return ConUser::where('conversation_id', $groupId)
+            ->with('user')
+            ->get()
+            ->unique('user_id');
     }
 
 }
