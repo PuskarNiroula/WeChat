@@ -57,6 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/api/group-chat/{conversationId}/get-old-members','getGroupMembers')->name('getOldMembers');
         Route::post('/api/group-chat/add-members','addNewMembers')->name('addNewMembers');
         Route::post('/api/group-chat/remove-members','removeMembers')->name('removeMembers');
+        Route::post('/api/group-chat/leave-group','leaveGroupChat')->name('leaveGroupChat');
     });
 
 

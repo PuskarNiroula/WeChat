@@ -16,5 +16,7 @@ interface ConversationUserRepositoryInterface
     public function addMemberToConversation(int $conversationId, array $member, int $keyVersion):void;
     public function deactivateMember(int $userId, int $groupId);
     public function activateMember(int $userId, int $groupId);
+    public function makeAdmin(int $userId, int $groupId);
+    public function removeAdmin(int $userId, int $groupId);
 
 }

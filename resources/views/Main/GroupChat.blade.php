@@ -159,11 +159,27 @@
                     userData: keyData,
                 }
             });
+
             const keyName = localStorage.getItem('user_id')+'-'+response.conversationId+'-'+response.latestKeyVersion;
 
             localStorage.setItem(keyName, keyData[localStorage.getItem('user_id')]);
-            window.location.href = `/dashboard`;
-
+            if(response.status==="success"){
+                Swal.fire({
+                    title: "Success!",
+                    text: "Group created successfully!",
+                    icon: "success",
+                    confirmButtonText: "OK",
+                }
+                ).then(() => {
+                    window.location.href = `/dashboard`;
+                });
+            }else{
+                Swal.fire({
+                    title: "Error!",
+                    text: "Something went wrong!",
+                    icon: "error",
+                });
+            }
         });
 
     </script>

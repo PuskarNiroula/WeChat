@@ -5,9 +5,11 @@ use App\ApiResponseModel\GroupChatCreationApiResponseModel;
 use App\ApiResponseModel\PrivateConversationCreationApiResponseModel;
 use App\Dto\ChatMember;
 use App\Dto\GroupChatCreateDto;
+use App\Enums\ConversationUserStatus;
 use App\Enums\MessageTypeEnum;
 use App\Interface\ConversationRepositoryInterface;
 use App\Interface\ConversationUserRepositoryInterface;
+use App\Models\ConUser;
 use App\Models\Conversation;
 use App\Models\User;
 use App\Repository\ConversationRepository;
@@ -77,11 +79,11 @@ class ConversationService{
         return $model;
 
     }
-    public function createGroupChat(GroupChatCreateDto $dto):GroupChatCreationApiResponseModel{
+    public function createGroupChat(GroupChatCreateDto $dto,int $userID):GroupChatCreationApiResponseModel{
         Db::beginTransaction();
         $conversation=$this->createGroupConversation($dto->name);
         $conversationId=$conversation['id'];
-        $this->conversationUserRepository->createGroupConversation($dto->getMembers(),$conversationId,);
+        $this->conversationUserRepository->createGroupConversation($dto->getMembers(),$conversationId,$userID);
         $messageDto=[];
         $messageDto['conversation_id']=$conversationId;
         $messageDto['message_tye']=MessageTypeEnum::TEXT;
@@ -161,9 +163,41 @@ class ConversationService{
             throw $e;
         }
     }
+    public function leaveGroup(int $conversationId,int $myId):void{
+        $conversation = Conversation::find($conversationId);
+        if(!$conversation){
+            throw new Exception("Conversation not found");
+        }
+       $conUser=ConUser::where('conversation_id',$conversationId)->where('user_id',$myId)->select('is_admin')->first();
+        if($conUser->is_admin) {
+            $this->conversationUserRepository->removeAdmin($myId,$conversationId);
+            $this->MakeAnotherUserAdminIfNoAdminInGroup($conversationId,$myId);
+            $this->conversationUserRepository->deactivateMember($myId,$conversationId);
+        }
+    }
 
     private function createGroupConversation(string $name):Conversation{
         return $this->conversationRepository->createGroupConversation($name);
+    }
+
+    private function MakeAnotherUserAdminIfNoAdminInGroup(int $conversationId,int $myId):void{
+
+        $anotherGroupAdmin=ConUser::where('conversation_id',$conversationId)
+            ->where('is_admin',1)
+            ->where('user_id','!=',$myId)
+            ->where('status',ConversationUserStatus::ACTIVE)
+            ->exists();
+
+        if($anotherGroupAdmin)
+            return;
+
+        $anotherRandomUser=ConUser::where('conversation_id',$conversationId)
+            ->where('user_id','!=',$myId)
+            ->where('status',ConversationUserStatus::ACTIVE)
+            ->select('user_id')->first();
+
+        $this->conversationUserRepository->makeAdmin($anotherRandomUser->user_id,$conversationId);
+
     }
 
 }

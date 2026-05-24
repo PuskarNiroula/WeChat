@@ -40,9 +40,13 @@ class ProfileController extends Controller
 
             $this->userService->updateProfile($data);
 
-            return response()->json(['message' => 'Profile updated successfully']);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Profile updated successfully']);
         } catch (Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()], 500);
         }
     }
 

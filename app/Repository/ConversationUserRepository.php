@@ -34,7 +34,7 @@ class ConversationUserRepository implements ConversationUserRepositoryInterface
         }
     }
 
-    public function createGroupConversation($list, $conversationId): void
+    public function createGroupConversation($list, $conversationId,$userId): void
     {
         /** @var ChatMember $dto */
         foreach ($list as $dto) {
@@ -42,7 +42,7 @@ class ConversationUserRepository implements ConversationUserRepositoryInterface
                 'user_id' => $dto->getUserId(),
                 'conversation_id' => $conversationId,
                 'encrypted_room_key' => $dto->getEncryptedKey(),
-                'is_admin' => $dto->isAdmin()
+                'is_admin' => $userId == $dto->getUserId() ? 1 : 0
             ]);
         }
 
@@ -105,5 +105,26 @@ class ConversationUserRepository implements ConversationUserRepositoryInterface
             ->update([
                 'status' => ConversationUserStatus::ACTIVE
             ]);
+    }
+
+    public function makeAdmin(int $userId, int $groupId)
+    {
+       ConUser::where('conversation_id', $groupId)
+            ->where('user_id', $userId)
+           ->where('status', ConversationUserStatus::ACTIVE)
+            ->update([
+                'is_admin' => 1
+            ]);
+    }
+
+    public function removeAdmin(int $userId, int $groupId)
+    {
+        ConUser::where('conversation_id', $groupId)
+            ->where('user_id', $userId)
+            ->where('status', ConversationUserStatus::ACTIVE)
+            ->update([
+                'is_admin' => 0
+            ]);
+
     }
 }

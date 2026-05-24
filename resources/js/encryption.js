@@ -19,8 +19,8 @@ const userId=localStorage.getItem('user_id');
     );
 }
 
-async function getSharedKeyByVersion(conversationId,keyVersion) {
-    const encryptedKey= await getEncryptedRoomKeyByVersion(conversationId, keyVersion);
+async function getSharedKeyByVersion(conversationId,keyVersion,latestKey) {
+    const encryptedKey= await getEncryptedRoomKeyByVersion(conversationId, keyVersion,latestKey);
     const userId=localStorage.getItem('user_id');
 
     const privateKey = await importPrivateKey(userId);
@@ -51,8 +51,8 @@ async function encryptMessage(message, sharedKey) {
     };
 }
 
-async function decryptMessage(encryptedBase64,conversation_id, ivBase64,keyVersion) {
-    const sharedKey = await getSharedKeyByVersion(conversation_id,keyVersion);
+async function decryptMessage(encryptedBase64,conversation_id, ivBase64,keyVersion,latestKey) {
+    const sharedKey = await getSharedKeyByVersion(conversation_id,keyVersion,latestKey);
     const encrypted = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
     const iv = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
 
@@ -102,7 +102,7 @@ async function sendEncryptedKeyToServer(receiverId, rawKey) {
 }
 async function getMyPublicKey() {
     const userId=localStorage.getItem('user_id');
-    return await secureFetch(`/api/user/${userId}/public-key`);
+    return getPublicKey(userId);
 }
 async function getPublicKey(receiverId) {
    return await secureFetch(`/api/user/${receiverId}/public-key`);
@@ -210,18 +210,33 @@ async function getEncryptedRoomKey(conversationId) {
     return encryptedKey;
 }
 
-async function getEncryptedRoomKeyByVersion(conversationId,keyVersion) {
+async function getEncryptedRoomKeyByVersion(conversationId, RequestedKeyVersion,latestVersion) {
     const userId = localStorage.getItem("user_id");
-    const keyName = `${userId}-${conversationId}-${keyVersion}`;
-    let encryptedKey = localStorage.getItem(keyName);
 
-    if(encryptedKey){
-        return encryptedKey;
+    const keyName = `${userId}-${conversationId}-${RequestedKeyVersion}`;
+
+    const cachedKey = localStorage.getItem(keyName);
+    if (cachedKey) {
+        return cachedKey;
     }
 
-    const response= await secureFetch(`/api/conversation/${conversationId}/key?version=${keyVersion}`);
-    localStorage.setItem(keyName,response.room_key);
-    return response.room_key;
+    const latestVersionKey = `${userId}-${conversationId}-latest`;
+
+    const savedLatestVersion = localStorage.getItem(latestVersionKey);
+
+
+    if (String(savedLatestVersion) !== String(latestVersion)) {
+        localStorage.setItem(latestVersionKey, latestVersion);
+        const response = await secureFetch(
+            `/api/conversation/${conversationId}/key?version=${RequestedKeyVersion}`
+        );
+
+        localStorage.setItem(keyName, response.room_key);
+
+        return response.room_key;
+    }
+
+    return null;
 
 }
 

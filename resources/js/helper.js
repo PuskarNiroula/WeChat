@@ -1,6 +1,5 @@
 
 async function generateKeysForGroups(users) {
-    console.log(users);
 
     let myKey = await getMyPublicKey();
     const roomKey = crypto.getRandomValues(new Uint8Array(16));

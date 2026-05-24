@@ -75,14 +75,14 @@
                                 </a>
                             </li>
 
-                            <li>
+                            <li class="admin-only" id="remove-members-option">
                                 <a class="dropdown-item text-danger" href="#" onclick="gotoRemoveMembers()">
                                     <i class="bi bi-person-dash me-2"></i>Remove Members
                                 </a>
                             </li>
 
                             <li>
-                                <a class="dropdown-item text-danger" href="#">
+                                <a class="dropdown-item text-danger" href="#" onclick="leaveGroup()">
                                     <i class="bi bi-box-arrow-right me-2"></i>Leave Group
                                 </a>
                             </li>
@@ -112,6 +112,7 @@
 @endsection
 
 @section('scripts')
+    <script src="{{ asset('js/groupChatHelpers.js') }}"></script>
     <script>
 
         let selectedUserId = null;
@@ -124,36 +125,6 @@
         const msgInput       = document.getElementById('message_to_be_sent');
 
 
-        function formatTime(ts) {
-            return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        }
-
-        function formatDate(ts) {
-            const d   = new Date(ts);
-            const now = new Date();
-            const yesterday = new Date(now);
-            yesterday.setDate(now.getDate() - 1);
-
-            if (d.toDateString() === now.toDateString())       return 'Today';
-            if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
-            return d.toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' });
-        }
-
-        function isSameDay(a, b) {
-            const da = new Date(a), db = new Date(b);
-            return da.getFullYear() === db.getFullYear() &&
-                da.getMonth()    === db.getMonth()    &&
-                da.getDate()     === db.getDate();
-        }
-
-        function avatarUrl(avatar) {
-            return avatar ? `/images/avatars/${avatar}` : `/images/avatars/avatar.jpg`;
-        }
-
-        function debounce(fn, delay) {
-            let t;
-            return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
-        }
 
 
         function buildBubble({ text, time, isSent, avatar, senderName, showAvatar, decryptFailed, isGroup }) {
@@ -219,6 +190,12 @@
                     ? groupOptions.classList.remove('d-none')
                     : groupOptions.classList.add('d-none');
 
+                if(meta.is_admin===false) {
+                    document.getElementById('remove-members-option').classList.add('d-none');
+                }
+
+
+
                 conId = conversationId;
 
                 const res      = await secureFetch(`/getMessages/${conversationId}`, { method: 'GET' });
@@ -233,11 +210,12 @@
                     </div>`;
                     return;
                 }
+                const lateKeyForThisConversation =getLatestKey(conId);
 
                 const decrypted = await Promise.all(
                     messages.slice().reverse().map(async (msg) => {
                         try {
-                            const text = await decryptMessage(msg.message,conId, msg.iv, msg.key_version);
+                            const text = await decryptMessage(msg.message,conId, msg.iv, msg.key_version,lateKeyForThisConversation);
                             return { ...msg, text, failed: false };
                         } catch {
                             return { ...msg, text: null, failed: true };
@@ -310,8 +288,10 @@
 
             try {
                 const keyVersion = await getLatestKey(conId);
+                console.log("Key Version: ", keyVersion);
 
-                const sharedKey = await getSharedKeyByVersion(conId, keyVersion);
+                const sharedKey = await getSharedKeyByVersion(conId, keyVersion,keyVersion);
+                console.log("Shared Key: ", sharedKey);
                 const encrypted = await encryptMessage(message, sharedKey);
 
 
@@ -429,7 +409,6 @@
 
                 if (!data || !data.conversationId) {
                     data = await createConversation(user_id);
-
                 }
 
                 conId = data.conversationId;
@@ -465,19 +444,7 @@
             });
             let key_name = localStorage.getItem('user_id')+"-"+"-"+response.conversationId+"-"+response.latestKeyVersion;
             localStorage.setItem(key_name,encryptedRoomKeyForSender);
-        }
-
-        function gotoGroupChatEditPage() {
-            window.location.href = `/group-chat/${conId}/edit`;
-        }
-        function gotoAddMemberPage() {
-            window.location.href = `/group-chat/${conId}/add-members`;
-        }
-        function gotoGroupDetailsPage() {
-            window.location.href = `/group-chat/${conId}/details`;
-        }
-        function gotoRemoveMembers(){
-            window.location.href = `/group-chat/${conId}/remove-members`;
+            return response;
         }
 
 
@@ -486,5 +453,20 @@
             loadSidebar();
             if (conId && selectedUserId) loadMessages(conId);
         });
+
+        async function leaveGroup() {
+            const response = await leaveGroupChat(conId);
+
+            if (response.status === "success") {
+                Swal.fire({
+                    title: 'Success',
+                    text: 'You have left the group successfully',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.href = '/dashboard';
+                });
+            }
+        }
     </script>
 @endsection

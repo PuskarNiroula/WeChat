@@ -44,9 +44,10 @@ class MessageService {
             throw $e;
         }
 
-        $this->broadcastMessage($messageDto, $message);
+        $this->broadcastMessage($messageDto);
         $this->cacheMessage($messageDto, $message);
     }
+
     public function getSidebar()
     {
         $userId = auth()->id();

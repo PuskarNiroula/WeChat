@@ -190,7 +190,7 @@
 
                 const keyData = await generateKeysForGroups(allUsers);
 
-                await secureFetch('/api/group-chat/add-members', {
+              const response=  await secureFetch('/api/group-chat/add-members', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -201,15 +201,22 @@
                     })
                 });
 
-                alert('Members added successfully');
-
-                selectedUsers = [];
-                renderSelectedUsers();
-                searchInput.value = '';
+                if(response.status==="success"){
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Members added successfully',
+                    }).then(() => {
+                        window.location.href = `/group-chat/${groupId}/details`;
+                    });
+                }
 
             } catch (err) {
-                console.error(err);
-                alert('Failed to add members');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: err.message || 'An error occurred',
+                });
             }
         });
 
