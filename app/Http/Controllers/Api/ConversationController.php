@@ -194,6 +194,7 @@ class ConversationController extends Controller
        try{
            $result = $this->conversationService->updateConversation($conversationId, $data);
            return response()->json([
+               'status' => 'success',
                'message' => 'Conversation updated successfully',
                'data' => $result
            ]);
