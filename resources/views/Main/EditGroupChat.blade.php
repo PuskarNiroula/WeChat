@@ -66,13 +66,31 @@
                 formData.append('image', fileInput.files[0]);
             }
 
-            await secureFetch(`/api/group/${conId}/update`, {
+          const response=  await secureFetch(`/api/group/${conId}/update`, {
                 method: 'POST',
                 headers: { 'Accept': 'application/json' },
                 body: formData
             });
+            if(response.status==="success"){
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Group updated successfully',
+                    showConfirmButton: true,
+                    timer: 1500
+                }).then(()=>{
+                    window.location.href = `/group-chat/${conId}/details`;
+                });
+            }else{
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Something went wrong',
+                    showConfirmButton: true,
+                    timer: 1500
+                })
 
-            alert('Group updated successfully');
+            }
+
+
         });
 
     </script>

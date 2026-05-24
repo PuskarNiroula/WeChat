@@ -15,9 +15,9 @@ class MessageRepository implements MessageRepositoryInterface
             'sender_id'=>$messageDto['sender_id'],
             'message_type'=>MessageTypeEnum::TEXT,
             'encrypted_message'=>$messageDto['message'],
+           'key_version'=>$messageDto['key_version'],
            'iv'=>$messageDto['iv'],
         ]);
-
     }
     public function getMessagesByConversation(int $conversationId, int $perPage = 50): LengthAwarePaginator
     {

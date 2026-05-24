@@ -114,7 +114,16 @@
                 },
                 body: formData
             });
+            if(response.status==="success") {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Profile Updated Successfully',
+                    showConfirmButton: true,
+                    timer: 2500
+                });
+            }
         });
+
 
     </script>
 @endsection

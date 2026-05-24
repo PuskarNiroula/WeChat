@@ -48,10 +48,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/api/conversation/{conversationId}/key','getRoomKey')->name('getRoomKey');
         Route::get('/api/conversation/{id}/meta','getConversationMeta')->name('getConversationMeta');
         Route::post('/api/group/{conId}/update','updateConversation')->name('updateGroupChat');
+        Route::get('/api/conversation/{conId}/latest-key','getLatestKey')->name('getLatestKey');
     });
 
     Route::controller(GroupChatApiController::class)->group(function () {
         Route::post('/api/group-chat/create','createGroupChat')->name('createGroupChat');
+        Route::get('/api/group-chat/new-member/{name}/search','searchNewMember')->name('searchNewMember');
+        Route::get('/api/group-chat/{conversationId}/get-old-members','getGroupMembers')->name('getOldMembers');
+        Route::post('/api/group-chat/add-members','addNewMembers')->name('addNewMembers');
+        Route::post('/api/group-chat/remove-members','removeMembers')->name('removeMembers');
+        Route::post('/api/group-chat/leave-group','leaveGroupChat')->name('leaveGroupChat');
     });
 
 

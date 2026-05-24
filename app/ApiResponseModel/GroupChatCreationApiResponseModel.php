@@ -9,4 +9,5 @@ class GroupChatCreationApiResponseModel
     public string $name;
     public ?string $avatar;
     public string $type="group";
+    public int $latestKeyVersion;
 }

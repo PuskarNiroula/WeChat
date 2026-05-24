@@ -100,13 +100,7 @@
         const resultsContainer = document.getElementById('searchResults');
         const searchInput = document.getElementById('userSearch');
 
-        function debounce(fn, delay) {
-            let timer;
-            return function (...args) {
-                clearTimeout(timer);
-                timer = setTimeout(() => fn.apply(this, args), delay);
-            };
-        }
+
 
         async function searchUsers(query) {
             if (!query) {
@@ -142,25 +136,9 @@
         searchInput.addEventListener('blur', () => {
             setTimeout(() => resultsContainer.style.display = 'none', 150);
         });
-
-        async function generateKeysForGroups() {
-            let myKey = await getMyPublicKey();
-            const roomKey = crypto.getRandomValues(new Uint8Array(16));
-
-            let userList = {};
-
-            userList[localStorage.getItem('user_id')] =
-                await encryptWithPublicKey(roomKey, myKey.public_key);
-
-            await Promise.all(
-                selectedUsers.map(async (user) => {
-                    let userKey = await window.getPublicKey(user.id);
-                    userList[user.id] =
-                        await encryptWithPublicKey(roomKey, userKey.public_key);
-                })
-            );
-
-            return userList;
+        function debounce(fn, delay) {
+            let t;
+            return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
         }
 
         $('#groupChatForm').submit(async function(e) {
@@ -172,16 +150,37 @@
                 alert('Group name and at least one member required');
                 return;
             }
+            const keyData = await generateKeysForGroups(selectedUsers);
 
             const response = await secureFetch('/api/group-chat/create', {
                 method: 'POST',
                 body: {
                     name,
-                    userData: await generateKeysForGroups()
+                    userData: keyData,
                 }
             });
-            console.log(response);
 
+            const keyName = localStorage.getItem('user_id')+'-'+response.conversationId+'-'+response.latestKeyVersion;
+
+            localStorage.setItem(keyName, keyData[localStorage.getItem('user_id')]);
+            if(response.status==="success"){
+                Swal.fire({
+                    title: "Success!",
+                    text: "Group created successfully!",
+                    icon: "success",
+                    confirmButtonText: "OK",
+                }
+                ).then(() => {
+                    window.location.href = `/dashboard`;
+                });
+            }else{
+                Swal.fire({
+                    title: "Error!",
+                    text: "Something went wrong!",
+                    icon: "error",
+                });
+            }
         });
+
     </script>
 @endsection

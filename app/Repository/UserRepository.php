@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Repository;
-use App\Exception\UserNotFoundException;
 use App\Interface\UserRepoInterface;
 use App\Models\User;
 
@@ -45,7 +44,7 @@ class UserRepository implements UserRepoInterface{
         $users = User::where('name', 'like', '%' . $name . '%')
             ->where('id', '!=', auth()->id())
             ->limit(10)
-            ->get(['id', 'name']);
+            ->get(['id', 'name','avatar']);
 
         $result = [];
 
@@ -53,6 +52,7 @@ class UserRepository implements UserRepoInterface{
             $result[] = [
                 'id' => $user->id,
                 'name' => $user->name,
+                'avatar' => $user->avatar,
             ];
         }
         return $result;

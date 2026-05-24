@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ConUser;
 use App\Models\Conversation;
 use App\Models\User;
+use App\Service\ConversationChecker;
 use App\Service\ConversationService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -15,9 +16,11 @@ use Illuminate\Http\Request;
 class ConversationController extends Controller
 {
     private ConversationService $conversationService;
+    private ConversationChecker $conversationChecker;
     public function __construct()
     {
         $this->conversationService=new ConversationService();
+        $this->conversationChecker=new ConversationChecker();
     }
 
     public function checkConversation($receiverId):JsonResponse{
@@ -97,10 +100,14 @@ class ConversationController extends Controller
            ],500);
        }
     }
-    public function getRoomKey(int $conversationId)
+    public function getRoomKey(int $conversationId,Request $request)
     {
+        $request->validate([
+            'version' => 'required|integer'
+        ]);
         $user = ConUser::where('conversation_id', $conversationId)
             ->where('user_id', auth()->id())
+            ->where('key_version',$request->query('version'))
             ->first();
 
         if (!$user) {
@@ -115,15 +122,24 @@ class ConversationController extends Controller
     }
     public function getConversationMeta(int $conversationId): JsonResponse
     {
+        if(!$this->conversationChecker->IsUserInConversation($conversationId,auth()->id())){
+            return response()->json([
+                'message'=>"You are not in this conversation"
+            ],401);
+        }
+
         $conversation = Conversation::findOrFail($conversationId);
 
         if ($conversation->type === 'group') {
+            $role = $conversation->conUsers()->where('user_id', auth()->id())
+            ->where('is_admin', true)->exists();
             return response()->json([
                 'id' => $conversation->id,
                 'type' => $conversation->type,
                 'name' => $conversation->name,
                 'avatar' => $conversation->image,
                 'is_group' => true,
+                'is_admin' => $role
             ]);
         }
 
@@ -142,6 +158,12 @@ class ConversationController extends Controller
 
     public function updateConversation(int $conversationId,Request $request): JsonResponse
     {
+        if(!$this->conversationChecker->IsUserInConversation($conversationId,auth()->id())){
+            return response()->json([
+                'message'=>"You are not in this conversation"
+            ],401);
+        }
+
         $request->validate([
             'name' => 'required|string',
             'image' => 'nullable|image'
@@ -172,6 +194,7 @@ class ConversationController extends Controller
        try{
            $result = $this->conversationService->updateConversation($conversationId, $data);
            return response()->json([
+               'status' => 'success',
                'message' => 'Conversation updated successfully',
                'data' => $result
            ]);
@@ -185,8 +208,30 @@ class ConversationController extends Controller
                'message'=> $e->getMessage(),
            ]);
        }
+    }
 
+    public function getLatestKey(int $conversationId){
+        if(!$this->conversationChecker->IsUserInConversation($conversationId,auth()->id())){
+            return response()->json([
+                'message'=>"You are not in this conversation"
+            ],401);
+        }
 
+        $version = Conversation::find($conversationId);
+        return response()->json($version['latest_key_version']);
+    }
+    public function getSharedKeyAccordingToVersion(int $conversationId,Request $request){
+        if(!$this->conversationChecker->IsUserInConversation($conversationId,auth()->id())){
+            return response()->json([
+                'message'=>"You are not in this conversation"
+            ],401);
+        }
+        $keyVersion = $request->query('version');
+        $conversationUser = ConUser::where('conversation_id',$conversationId)
+            ->where('user_id',auth()->id())
+            ->where('key_version',$keyVersion)
+            ->first();
+        return response()->json($conversationUser['encrypted_room_key']);
     }
 
 }

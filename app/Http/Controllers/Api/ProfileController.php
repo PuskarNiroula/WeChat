@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Service\UserService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -24,7 +25,7 @@ class ProfileController extends Controller
     {
         $valid = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:120', 'regex:/^[\p{L}\p{N}\p{Zs}\p{P}\p{S}]+$/u'],
-            'avatar' => 'file|mimes:jpeg,png,jpg,gif,svg,webp|max:1024'
+            'avatar' => 'file|mimes:jpeg,png,jpg,gif,svg,webp|max:14000'
         ]);
 
         if ($valid->fails()) {
@@ -39,9 +40,13 @@ class ProfileController extends Controller
 
             $this->userService->updateProfile($data);
 
-            return response()->json(['message' => 'Profile updated successfully']);
-        } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Profile updated successfully']);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()], 500);
         }
     }
 

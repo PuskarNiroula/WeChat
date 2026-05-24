@@ -1,11 +1,4 @@
 // Debounce function: delays execution until user stops typing
-function debounce(fn, delay) {
-    let timer;
-    return function(...args) {
-        clearTimeout(timer);
-        timer = setTimeout(() => fn.apply(this, args), delay);
-    };
-}
 
 // Search function that calls the API using secureFetch
 async function search(query) {
@@ -22,7 +15,6 @@ async function search(query) {
             method: 'GET'
         });
 
-        // Clear previous results
         resultsContainer.innerHTML = '';
 
         if (results.length === 0) {
@@ -30,7 +22,6 @@ async function search(query) {
             return;
         }
 
-        // Populate results
         results.forEach(user => {
             const div = document.createElement('div');
             div.textContent = user;

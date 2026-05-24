@@ -1,11 +1,27 @@
 
-async function getSharedKey(conversation) {
+async function getSharedKey(conversationId) {
 
-    const userId = localStorage.getItem("user_id");
+const encryptedKey=await getEncryptedRoomKey(conversationId);
 
-    const res = await secureFetch(`/api/conversation/${conversation}/key`);
+const userId=localStorage.getItem('user_id');
 
-    const encryptedKey = res.room_key;
+
+    const privateKey = await importPrivateKey(userId);
+
+    const aesKeyBytes = await decryptRoomKey(encryptedKey, privateKey);
+
+    return await crypto.subtle.importKey(
+        "raw",
+        aesKeyBytes,
+        { name: "AES-GCM" },
+        false,
+        ["encrypt", "decrypt"]
+    );
+}
+
+async function getSharedKeyByVersion(conversationId,keyVersion,latestKey) {
+    const encryptedKey= await getEncryptedRoomKeyByVersion(conversationId, keyVersion,latestKey);
+    const userId=localStorage.getItem('user_id');
 
     const privateKey = await importPrivateKey(userId);
 
@@ -35,7 +51,8 @@ async function encryptMessage(message, sharedKey) {
     };
 }
 
-async function decryptMessage(encryptedBase64, ivBase64, sharedKey) {
+async function decryptMessage(encryptedBase64,conversation_id, ivBase64,keyVersion,latestKey) {
+    const sharedKey = await getSharedKeyByVersion(conversation_id,keyVersion,latestKey);
     const encrypted = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
     const iv = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
 
@@ -85,7 +102,7 @@ async function sendEncryptedKeyToServer(receiverId, rawKey) {
 }
 async function getMyPublicKey() {
     const userId=localStorage.getItem('user_id');
-    return await secureFetch(`/api/user/${userId}/public-key`);
+    return getPublicKey(userId);
 }
 async function getPublicKey(receiverId) {
    return await secureFetch(`/api/user/${receiverId}/public-key`);
@@ -161,6 +178,68 @@ async function decryptRoomKey(encryptedRoomKeyBase64,privateKey) {
     return new Uint8Array(decrypted);
 }
 
+async function getLatestKey(conversationId) {
+    return await secureFetch(`/api/conversation/${conversationId}/latest-key`);
+}
+async function getEncryptedRoomKey(conversationId) {
+
+    const userId = localStorage.getItem("user_id");
+
+    const key_version = await getLatestKey(conversationId);
+
+
+    const keyName = `${userId}-${conversationId}-${key_version}`;
+
+    let encryptedKey = localStorage.getItem(keyName);
+
+
+    if (!encryptedKey) {
+       const response = await secureFetch(
+            `/api/conversation/${conversationId}/key?version=${key_version}`
+        );
+       encryptedKey=response.room_key;
+
+
+        if (encryptedKey) {
+            localStorage.setItem(keyName, encryptedKey);
+        } else {
+            throw new Error("Room key not found on server");
+        }
+    }
+
+    return encryptedKey;
+}
+
+async function getEncryptedRoomKeyByVersion(conversationId, RequestedKeyVersion,latestVersion) {
+    const userId = localStorage.getItem("user_id");
+
+    const keyName = `${userId}-${conversationId}-${RequestedKeyVersion}`;
+
+    const cachedKey = localStorage.getItem(keyName);
+    if (cachedKey) {
+        return cachedKey;
+    }
+
+    const latestVersionKey = `${userId}-${conversationId}-latest`;
+
+    const savedLatestVersion = localStorage.getItem(latestVersionKey);
+
+
+    if (String(savedLatestVersion) !== String(latestVersion)) {
+        localStorage.setItem(latestVersionKey, latestVersion);
+        const response = await secureFetch(
+            `/api/conversation/${conversationId}/key?version=${RequestedKeyVersion}`
+        );
+
+        localStorage.setItem(keyName, response.room_key);
+
+        return response.room_key;
+    }
+
+    return null;
+
+}
+
 window.sendEncryptedKeyToServer = sendEncryptedKeyToServer;
 window.getSharedKey = getSharedKey;
 window.encryptMessage = encryptMessage;
@@ -169,3 +248,6 @@ window.getMyPublicKey = getMyPublicKey;
 window.getPublicKey = getPublicKey;
 window.encryptWithPublicKey = encryptWithPublicKey;
 window.decryptRoomKey = decryptRoomKey;
+window.getLatestKey = getLatestKey;
+window.getSharedKeyByVersion=getSharedKeyByVersion;
+
