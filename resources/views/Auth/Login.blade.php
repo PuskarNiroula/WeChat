@@ -90,6 +90,7 @@
     </div>
 
 </div>
+<script src="/js/script.js"></script>
 <script>
     const csrf = `{{ csrf_token() }}`;
 
@@ -168,7 +169,7 @@
                 } catch (keyErr) {
                     console.error("Key setup failed:", keyErr);
 
-                    await secureFetch('/logout', {
+                    await secureFetch('/api/logout', {
                         method: 'POST',
                     });
 
@@ -181,17 +182,9 @@
 
                 if (!stored) {
                     console.log('trying to logout');
-                    await fetch('/logout', {
+                    await secureFetch('/api/logout', {
                         method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': csrf,
-                            'Content-Type': 'application/json'
-                        },
-                        credentials: 'same-origin'
                     });
-
-
-                    alert("Private key missing. Login blocked.");
                     return;
                 }
             }
@@ -201,13 +194,8 @@
         } catch (err) {
             console.error("Login error:", err);
 
-            await fetch('/logout', {
+            await secureFetch('/api/logout', {
                 method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrf,
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'same-origin'
             });
         }
     });

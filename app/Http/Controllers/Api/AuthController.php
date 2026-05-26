@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 
+use App\Models\Session;
 use App\Service\UserService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -23,7 +24,6 @@ class AuthController extends Controller
     {
         $this->userService = $userService;
     }
-    // Register user
     public function register(Request $request): JsonResponse
     {
         $request->validate([
@@ -48,12 +48,8 @@ class AuthController extends Controller
         }
 
 
-
-        // Create token
-
     }
 
-    // Login user
 
     /**
      * @throws ValidationException
@@ -172,7 +168,6 @@ class AuthController extends Controller
         return response()->json(['message'=>'Invalid token'],400);
     }
 
-    // Get current user
     public function me(Request $request):JsonResponse
     {
         return response()->json($request->user());
@@ -197,6 +192,38 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Public key saved successfully'
+        ]);
+    }
+
+    public function changePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'new_password' => 'required|string|min:6',
+            'password_confirmation' => 'required|string|min:6|same:new_password',
+        ]);
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'Error',
+                'message' => 'User not found'
+            ], 500);
+        }
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'status' => 'Success',
+            'message' => 'Password changed successfully'
+        ]);
+    }
+    public function logoutAllDevices(Request $request): JsonResponse
+    {
+
+       Session::where('user_id', $request->user()->id)->delete();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Logged out from all devices'
         ]);
     }
 
