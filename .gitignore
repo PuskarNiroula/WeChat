@@ -16,9 +16,15 @@
 /public/build
 /public/hot
 /public/storage
+/public/images/avatars
 /storage/*.key
 /storage/pail
 /vendor
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+!public/images/avatars/avatar.jpg
+!public/images/avatars/default_group_image.png
+!public/images/logo.jpeg
+
