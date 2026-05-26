@@ -95,7 +95,6 @@
             <div class="chat-messages" id="chatMessages"></div>
 
             <div class="chat-input-area">
-                <i class="bi bi-paperclip icon-btn"></i>
                 <input type="text" id="message_to_be_sent" placeholder="Type a message">
                 <button class="btn-send" id="sendBtn">
                     <i class="bi bi-send-fill"></i>
@@ -192,6 +191,9 @@
 
                 if(meta.is_admin===false) {
                     document.getElementById('remove-members-option').classList.add('d-none');
+                }
+                if (meta.status === "InActive") {
+                    document.querySelector('.chat-input-area').style.display = 'none';
                 }
 
 

@@ -18,14 +18,18 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/api/login', 'login')->name('api.login');
     Route::post('/sendPasswordResetLinkEmail', 'sendResetLink')->name('password.email');
     Route::post('/api/resetPassword/{token}/{email}', 'resetPassword')->name('password.update');
+
 });
 Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
     ->name('verification.verify');
 
 Route::middleware('auth:sanctum')->group(function () {
+
     Route::controller(AuthController::class)->group(function () {
         Route::post('/api/user/public-key', 'publicKey')->name('getPublicKey');
         Route::post('/api/logout', 'logout')->name('api.logout');
+        Route::post('/api/change-password', 'changePassword')->name('api.changePassword');
+        Route::post('api/logout','logoutAllDevices')->name('api.logout');
     });
 
     Route::get('/api/user/{receiverId}/public-key',[KeyController::class,'getPublicKey'])->name('getPublicKey');

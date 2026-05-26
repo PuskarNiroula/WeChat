@@ -131,15 +131,16 @@ class ConversationController extends Controller
         $conversation = Conversation::findOrFail($conversationId);
 
         if ($conversation->type === 'group') {
-            $role = $conversation->conUsers()->where('user_id', auth()->id())
-            ->where('is_admin', true)->exists();
+            $user = $conversation->conUsers()->where('user_id', auth()->id())->first();
+
             return response()->json([
                 'id' => $conversation->id,
                 'type' => $conversation->type,
                 'name' => $conversation->name,
                 'avatar' => $conversation->image,
                 'is_group' => true,
-                'is_admin' => $role
+                'is_admin' => $user->is_admin,
+                'status' => $user->status,
             ]);
         }
 

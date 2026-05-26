@@ -1,9 +1,8 @@
-// Function to get token from localStorage
+
 function getToken() {
     return localStorage.getItem('token');
 }
 
-// Secure fetch wrapper
 async function secureFetch(url, options = {}) {
     options = options || {};
     options.headers = {
