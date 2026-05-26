@@ -1,6 +1,6 @@
 @extends('Layouts.layout')
 
-@section('title', 'We Chat')
+@section('title', 'Gossip')
 
 @section('styles')
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
         <div class="chat-sidebar">
 
             <div class="sidebar-header">
-                <h5>We Chat</h5>
+                <h5>Gossip</h5>
                 <div class="dropdown">
                     <i class="bi bi-three-dots-vertical"
                        role="button"
@@ -103,7 +103,7 @@
         </div>
 
         <div id="logo-image-div" class="chat-logo">
-            <img id="logo-image" src="{{ asset('/images/logo.png') }}" alt="We Chat">
+            <img id="logo-image" src="{{ asset('/images/logo.jpeg') }}" alt="We Chat">
             <p>Click on a conversation to start chatting</p>
         </div>
 

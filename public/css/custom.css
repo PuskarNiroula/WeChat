@@ -265,9 +265,9 @@ body, html {
 }
 
 #logo-image {
-    width: 40vw;
+    width: 100%;
     min-width: 100px;
-    height: auto;
+    height: 100%;
 }
 #emojiPicker {
     position: absolute;
